@@ -1,5 +1,5 @@
 {
-  "name": "solitaire",
+  "name": "poker",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -13,7 +13,7 @@
     "react-motion": "^0.5.2",
     "react-scripts": "3.4.0"
   },
-  "homepage": "/solitaire",
+  "homepage": "/poker",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

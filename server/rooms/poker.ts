@@ -1,39 +1,7 @@
 import { Room, Delayed, Client } from 'colyseus'
-import { type, Schema, MapSchema, ArraySchema } from '@colyseus/schema'
-import shuffle from 'lodash/shuffle'
-
-class Card extends Schema {
-  @type('number')
-  value: number
-
-  @type('number')
-  suit: number
-
-  @type('number')
-  index: number
-
-  constructor(value: number, suit: number, index: number) {
-    super()
-
-    this.value = value
-    this.suit = suit
-    this.index = index
-  }
-}
-
-class Player extends Schema {
-  @type('string')
-  id: string
-
-  @type({ map: Card })
-  cards = new MapSchema<Card>()
-
-  constructor(id: string) {
-    super()
-
-    this.id = id
-  }
-}
+import { type, Schema, MapSchema } from '@colyseus/schema'
+import { Player } from '../schema/Player'
+import { Card } from '../schema/Card'
 
 class State extends Schema {
   @type('string')
@@ -44,12 +12,6 @@ class State extends Schema {
 
   @type({ map: Card })
   deck = new MapSchema<Card>()
-}
-
-interface CardI {
-  suit: number
-  value: number
-  index: number
 }
 
 export class Poker extends Room<State> {

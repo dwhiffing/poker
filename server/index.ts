@@ -2,7 +2,7 @@ import http from 'http'
 import express from 'express'
 import cors from 'cors'
 import { Server } from 'colyseus'
-import { Poker } from './poker'
+import { Poker } from './rooms/poker'
 
 const app = express()
 const port = Number(process.env.PORT || 3553)
