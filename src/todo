@@ -1,0 +1,5 @@
+fix z-index for good
+allow dropping into pile from below
+make drop area for cards larger
+should rotate while dragging above potential drop points
+only re-render after animations finish?
