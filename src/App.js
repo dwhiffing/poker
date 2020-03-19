@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react'
 import './index.css'
 import './card.css'
 import { Players } from './components/Players'
+import { Card } from './components/Card'
 
 function App() {
   const [room, setRoom] = useState()
   const [state, setState] = useState({
     players: [],
+    cards: [],
   })
 
   const connect = async () => {
@@ -40,7 +42,12 @@ function App() {
 
     room.state.onChange = changes => {
       changes.forEach(change => {
-        if (change.field === 'currentTurn') {
+        if (change.field === 'cards') {
+          setState(state => ({
+            ...state,
+            cards: Object.values(change.value.toJSON()),
+          }))
+        } else if (change.field === 'currentTurn') {
           setState(state => ({
             ...state,
             currentTurn: change.value,
@@ -50,13 +57,18 @@ function App() {
             ...state,
             players: Object.values(change.value.toJSON()).map(p => ({
               ...p,
-              cards: Object.values(p.cards),
+              cards:
+                p.id === room.sessionId
+                  ? Object.values(p.cards)
+                  : Object.values(p.cards).map(c => ({})),
             })),
           }))
         }
       })
     }
   }, [room])
+
+  console.log(state)
 
   useEffect(() => {
     connect()
@@ -74,6 +86,18 @@ function App() {
     <div>
       <div className="container">
         <Players activeId={state.currentTurn} players={state.players} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
+          {state.cards.map((card, i) => (
+            <Card
+              key={card.index}
+              x={20 * i - 50}
+              y={-20}
+              scale={0.6}
+              card={card}
+            />
+          ))}
+        </div>
+
         <Actions
           onAction={obj => room.send(obj)}
           canMove={state.currentTurn === room.sessionId}

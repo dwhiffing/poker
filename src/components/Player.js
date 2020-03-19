@@ -31,7 +31,7 @@ export const Player = ({
       {!connected && <p>{remainingConnectionTime} seconds to reconnect</p>}
       <div style={{ position: 'relative' }}>
         {cards.map((card, i) => (
-          <Card key={card.index} x={20 * i} y={0} scale={0.6} card={card} />
+          <Card key={i} x={20 * i} y={0} scale={0.6} card={card} />
         ))}
       </div>
     </div>

@@ -27,7 +27,9 @@ class State extends Schema {
 export class Poker extends Room<State> {
   maxClients = 10
   randomMoveTimeout: Delayed
-  gameStarted = false
+  activePlayerIndex = 0
+  stateIndex = 0
+  cards = []
 
   onCreate() {
     this.setState(new State())
@@ -42,7 +44,7 @@ export class Poker extends Room<State> {
     this.state.currentTurn = client.sessionId
     this.setAutoMoveTimeout()
 
-    if (Object.keys(this.state.players).length >= 2 && !this.gameStarted) {
+    if (Object.keys(this.state.players).length >= 2 && this.stateIndex === 0) {
       this.dealCards()
     }
 
@@ -52,16 +54,37 @@ export class Poker extends Room<State> {
   }
 
   dealCards() {
-    this.gameStarted = true
-    shuffleCards().forEach(card => {
-      this.state.cards[card.index] = new Card(card.value, card.suit, card.index)
-    })
+    const numPlayers = Object.values(this.state.players).length
+    if (this.stateIndex === 0) {
+      this.stateIndex = 1
+      let cardIndex = 0
 
-    for (let id in this.state.players) {
-      const player = this.state.players[id]
-      const index = Math.floor(Math.random() * 52) + 1
-      player.cards[0] = this.state.cards[index]
-      player.cards[1] = this.state.cards[index - 1]
+      delete this.state.cards[0]
+      delete this.state.cards[1]
+      delete this.state.cards[2]
+      delete this.state.cards[3]
+      delete this.state.cards[4]
+
+      this.cards = shuffleCards().map(
+        card => new Card(card.value, card.suit, card.index),
+      )
+
+      for (let id in this.state.players) {
+        const player = this.state.players[id]
+        player.cards[0] = this.cards[cardIndex++]
+        player.cards[1] = this.cards[cardIndex++]
+      }
+    } else if (this.stateIndex === 1) {
+      this.stateIndex = 2
+      this.state.cards[0] = this.cards[numPlayers * 2]
+      this.state.cards[1] = this.cards[numPlayers * 2 + 1]
+      this.state.cards[2] = this.cards[numPlayers * 2 + 2]
+    } else if (this.stateIndex === 2) {
+      this.stateIndex = 3
+      this.state.cards[3] = this.cards[numPlayers * 2 + 3]
+    } else if (this.stateIndex === 3) {
+      this.stateIndex = 4
+      this.state.cards[4] = this.cards[numPlayers * 2 + 4]
     }
   }
 
@@ -69,8 +92,17 @@ export class Poker extends Room<State> {
     if (client.sessionId === this.state.currentTurn) {
       const playerIds = Object.keys(this.state.players)
       const index = playerIds.indexOf(client.sessionId) + 1
+      this.activePlayerIndex += 1
       this.state.currentTurn =
         index >= playerIds.length ? playerIds[0] : playerIds[index]
+
+      if (this.activePlayerIndex >= playerIds.length) {
+        this.activePlayerIndex = 0
+        if (this.stateIndex >= 4) {
+          this.stateIndex = 0
+        }
+        this.dealCards()
+      }
       this.setAutoMoveTimeout()
     }
     return this.state
@@ -83,7 +115,7 @@ export class Poker extends Room<State> {
       this.randomMoveTimeout.clear()
     }
 
-    player.remainingMoveTime = 15
+    player.remainingMoveTime = 2
     this.randomMoveTimeout = this.clock.setInterval(() => {
       player.remainingMoveTime -= 1
 

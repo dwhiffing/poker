@@ -5,7 +5,7 @@ export const Card = ({ card, x = 0, y = 0, scale = 1, style = {} }) => {
   const classes = [
     'card',
     card && `rank${card.value}`,
-    !card && 'finished',
+    !card.value && 'finished',
     card && SUITS[card.suit],
   ]
 
