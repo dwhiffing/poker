@@ -4,6 +4,7 @@ import { Card } from './Card'
 export const Player = ({
   activeId,
   remainingConnectionTime,
+  remainingMoveTime,
   connected,
   id,
   money,
@@ -26,10 +27,11 @@ export const Player = ({
       <p>{id}</p>
       <p>${money}</p>
       <p>{status}</p>
-      <p>{remainingConnectionTime}</p>
+      {activeId === id && <p>{remainingMoveTime} seconds to play</p>}
+      {!connected && <p>{remainingConnectionTime} seconds to reconnect</p>}
       <div style={{ position: 'relative' }}>
         {cards.map((card, i) => (
-          <Card key={card.index} x={20 * i} y={-50} scale={0.6} card={card} />
+          <Card key={card.index} x={20 * i} y={0} scale={0.6} card={card} />
         ))}
       </div>
     </div>

@@ -16,7 +16,11 @@ function App() {
     let room
 
     if (sessionId && pokerRoom) {
-      room = await window.colyseus.reconnect(pokerRoom.roomId, sessionId)
+      try {
+        room = await window.colyseus.reconnect(pokerRoom.roomId, sessionId)
+      } catch (e) {
+        localStorage.removeItem('sessionId')
+      }
     } else {
       room = await window.colyseus.joinOrCreate('poker')
     }
@@ -29,6 +33,10 @@ function App() {
 
   useEffect(() => {
     if (!room) return
+
+    room.onLeave(() => {
+      setRoom(null)
+    })
 
     room.state.onChange = changes => {
       changes.forEach(change => {

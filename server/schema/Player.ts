@@ -14,6 +14,9 @@ export class Player extends Schema {
   @type('number')
   remainingConnectionTime: number
 
+  @type('number')
+  remainingMoveTime: number
+
   @type({ map: Card })
   cards = new MapSchema<Card>()
 
@@ -22,6 +25,7 @@ export class Player extends Schema {
     this.id = id
     this.money = 0
     this.remainingConnectionTime = 0
+    this.remainingMoveTime = 0
     this.connected = true
   }
 }

@@ -77,14 +77,23 @@ export class Poker extends Room<State> {
   }
 
   setAutoMoveTimeout() {
+    const sessionId = this.state.currentTurn
+    const player = this.state.players[sessionId]
     if (this.randomMoveTimeout) {
       this.randomMoveTimeout.clear()
     }
-    this.randomMoveTimeout = this.clock.setTimeout(() => {
-      this.onMessage({ sessionId: this.state.currentTurn } as Client, {
-        action: 'fold',
-      })
-    }, 3000)
+
+    player.remainingMoveTime = 15
+    this.randomMoveTimeout = this.clock.setInterval(() => {
+      player.remainingMoveTime -= 1
+
+      if (player.remainingMoveTime <= 0) {
+        this.randomMoveTimeout.clear()
+        this.onMessage({ sessionId: this.state.currentTurn } as Client, {
+          action: 'fold',
+        })
+      }
+    }, 1000)
   }
 
   onLeave = async (client, consented) => {
@@ -115,6 +124,7 @@ export class Poker extends Room<State> {
       }, 1000)
 
       await reconnection
+      clearInterval(interval)
 
       player.connected = true
     } catch (e) {
