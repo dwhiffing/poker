@@ -90,17 +90,33 @@ export class Poker extends Room<State> {
   onLeave = async (client, consented) => {
     if (this.randomMoveTimeout) this.randomMoveTimeout.clear()
 
-    this.state.players[client.sessionId].connected = false
+    const player = this.state.players[client.sessionId]
+    player.connected = false
 
     try {
       if (consented) {
         throw new Error('consented leave')
       }
 
-      // allow disconnected client to reconnect into this room until 20 seconds
-      await this.allowReconnection(client, 20)
+      const reconnection = this.allowReconnection(client)
+      player.remainingConnectionTime = 30
 
-      this.state.players[client.sessionId].connected = true
+      const interval = setInterval(() => {
+        if (!player) {
+          clearInterval(interval)
+          return
+        }
+
+        player.remainingConnectionTime -= 1
+        if (player.remainingConnectionTime === 0) {
+          reconnection.reject()
+          clearInterval(interval)
+        }
+      }, 1000)
+
+      await reconnection
+
+      player.connected = true
     } catch (e) {
       delete this.state.players[client.sessionId]
     }
