@@ -45,3 +45,7 @@ body {
   background-color: rgba(255, 255, 255, 0.25);
   border-radius: 8px;
 }
+
+.disconnected {
+  background-color: rgba(177, 25, 25, 0.39);
+}

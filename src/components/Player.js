@@ -1,10 +1,12 @@
 import React from 'react'
 import { Card } from './Card'
 
-export const Player = ({ activeId, id, money, status, cards }) =>
+export const Player = ({ activeId, connected, id, money, status, cards }) =>
   id ? (
     <div
-      className={`${activeId === id ? 'active' : ''}`}
+      className={`${activeId === id ? 'active' : ''} ${
+        !connected ? 'disconnected' : ''
+      }`}
       style={{
         flex: 1,
         display: 'flex',

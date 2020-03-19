@@ -5,6 +5,9 @@ export class Player extends Schema {
   @type('string')
   id: string
 
+  @type('boolean')
+  connected: boolean
+
   @type('number')
   money: number
 
@@ -15,5 +18,6 @@ export class Player extends Schema {
     super()
     this.id = id
     this.money = 0
+    this.connected = true
   }
 }

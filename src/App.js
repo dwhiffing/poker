@@ -10,8 +10,25 @@ function App() {
   })
 
   const connect = async () => {
-    const room = await window.colyseus.joinOrCreate('poker')
-    setRoom(room)
+    const sessionId = localStorage.getItem('sessionId')
+    const rooms = await window.colyseus.getAvailableRooms()
+    const pokerRoom = rooms[0]
+    let room
+
+    if (sessionId && pokerRoom) {
+      room = await window.colyseus.reconnect(pokerRoom.roomId, sessionId)
+    } else {
+      room = await window.colyseus.joinOrCreate('poker')
+    }
+
+    if (room) {
+      localStorage.setItem('sessionId', room.sessionId)
+      setRoom(room)
+    }
+  }
+
+  useEffect(() => {
+    if (!room) return
 
     room.state.onChange = changes => {
       changes.forEach(change => {
@@ -31,19 +48,27 @@ function App() {
         }
       })
     }
-  }
+  }, [room])
 
   useEffect(() => {
     connect()
   }, [])
+
+  if (!room) {
+    return (
+      <div>
+        <p>Could not connect</p>
+      </div>
+    )
+  }
 
   return (
     <div>
       <div className="container">
         <Players activeId={state.currentTurn} players={state.players} />
         <Actions
-          onAction={room ? obj => room.send(obj) : () => {}}
-          canMove={room && state.currentTurn === room.sessionId}
+          onAction={obj => room.send(obj)}
+          canMove={state.currentTurn === room.sessionId}
         />
       </div>
     </div>
