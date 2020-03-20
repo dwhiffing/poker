@@ -1,40 +1,56 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './index.css'
 import './card.css'
 import { Room } from './components/Room'
 import { Card } from './components/Card'
 
 function App() {
+  const intervalRef = useRef()
+  const [availableRooms, setAvailableRooms] = useState([])
   const [room, setRoom] = useState()
   const [state, setState] = useState({
     players: [],
     cards: [],
   })
 
-  const connect = async () => {
-    const sessionId = localStorage.getItem('sessionId')
+  const getAvailableRooms = async () => {
     const rooms = await window.colyseus.getAvailableRooms()
-    const pokerRoom = rooms[0]
+    setAvailableRooms(rooms)
+  }
+
+  const createRoom = async () => {
+    const room = await window.colyseus.create('poker')
+    localStorage.setItem(room.id, room.sessionId)
+    setRoom(room)
+  }
+
+  const joinRoom = async roomId => {
+    let sessionId = localStorage.getItem(roomId)
+
     let room
-
-    if (sessionId && pokerRoom) {
+    console.log(roomId, sessionId)
+    if (sessionId) {
       try {
-        room = await window.colyseus.reconnect(pokerRoom.roomId, sessionId)
+        console.log('trying reconnect')
+        room = await window.colyseus.reconnect(roomId, sessionId)
       } catch (e) {
-        localStorage.removeItem('sessionId')
+        console.log('reconnect failed')
+        localStorage.removeItem(roomId)
       }
-    } else {
-      room = await window.colyseus.joinOrCreate('poker')
     }
 
-    if (room) {
-      localStorage.setItem('sessionId', room.sessionId)
-      setRoom(room)
+    if (!room) {
+      room = await window.colyseus.joinById(roomId)
+      console.log('joined', room.sessionId)
+      localStorage.setItem(room.id, room.sessionId)
     }
+
+    setRoom(room)
   }
 
   useEffect(() => {
     if (!room) return
+    clearInterval(intervalRef.current)
 
     room.onLeave(() => {
       setRoom(null)
@@ -69,16 +85,29 @@ function App() {
   }, [room])
 
   useEffect(() => {
-    connect()
+    getAvailableRooms()
+    intervalRef.current = setInterval(getAvailableRooms, 1000)
   }, [])
 
   if (!room) {
     return (
       <div>
-        <p>Could not connect</p>
+        {availableRooms.length === 0 && <p>No rooms available</p>}
+        {availableRooms.map(room => (
+          <div key={room.roomId}>
+            <p
+              style={{ cursor: 'pointer' }}
+              onClick={() => joinRoom(room.roomId)}
+            >
+              {room.roomId}
+            </p>
+          </div>
+        ))}
+        <button onClick={createRoom}>Create room</button>
       </div>
     )
   }
+
   console.log(state)
 
   const canMove = state.currentTurn === room.sessionId
