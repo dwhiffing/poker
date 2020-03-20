@@ -12,6 +12,9 @@ export class Player extends Schema {
   money: number
 
   @type('number')
+  seatIndex: number
+
+  @type('number')
   remainingConnectionTime: number
 
   @type('number')
@@ -26,6 +29,7 @@ export class Player extends Schema {
     this.money = 0
     this.remainingConnectionTime = 0
     this.remainingMoveTime = 0
+    this.seatIndex = -1
     this.connected = true
   }
 }

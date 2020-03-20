@@ -8,6 +8,7 @@ const orderedCards = new Array(52).fill('').map((_, i) => ({
   value: (i % 13) + 1,
   suit: Math.floor(i / 13),
 }))
+// TODO: need to handle turn logic when player disconnects
 
 const shuffleCards = () =>
   shuffle(orderedCards).map((d, i) => ({ ...d, index: i }))
@@ -41,23 +42,35 @@ export class Poker extends Room<State> {
     }
     this.state.players[client.sessionId] = new Player(client.sessionId)
 
-    this.state.currentTurn = client.sessionId
-    this.setAutoMoveTimeout()
-
-    if (Object.keys(this.state.players).length >= 2 && this.stateIndex === 0) {
-      this.dealCards()
-    }
-
     if (Object.keys(this.state.players).length === 10) {
       this.lock()
     }
   }
 
+  takeSeat(sessionId, seatIndex) {
+    if (this.state.players[sessionId].seatIndex > -1) {
+      return
+    }
+    this.state.players[sessionId].seatIndex = seatIndex
+  }
+
+  leaveSeat(sessionId) {
+    this.state.players[sessionId].seatIndex = -1
+  }
+
+  startGame() {
+    if (Object.keys(this.state.players).length >= 2 && this.stateIndex === 0) {
+      this.dealCards()
+    }
+  }
+
   dealCards() {
+    this.setAutoMoveTimeout()
     const numPlayers = Object.values(this.state.players).length
     if (this.stateIndex === 0) {
       this.stateIndex = 1
       let cardIndex = 0
+      this.state.currentTurn = Object.values(this.state.players)[0].id
 
       delete this.state.cards[0]
       delete this.state.cards[1]
@@ -89,12 +102,49 @@ export class Poker extends Room<State> {
   }
 
   onMessage(client: Client, data: any) {
+    if (data.action === 'fold' || data.action === 'check') {
+      this.onCheckFold(client, data)
+    }
+    if (data.action === 'deal') {
+      this.startGame()
+    }
+    if (data.action === 'sit') {
+      this.takeSeat(client.sessionId, data.seatIndex)
+    }
+    if (data.action === 'stand') {
+      this.leaveSeat(client.sessionId)
+    }
+    return this.state
+  }
+
+  onCheckFold(client, data) {
     if (client.sessionId === this.state.currentTurn) {
+      const players = Object.values(this.state.players)
       const playerIds = Object.keys(this.state.players)
-      const index = playerIds.indexOf(client.sessionId) + 1
-      this.activePlayerIndex += 1
-      this.state.currentTurn =
-        index >= playerIds.length ? playerIds[0] : playerIds[index]
+
+      if (data.action === 'fold') {
+        delete this.state.players[client.sessionId].cards[0]
+        delete this.state.players[client.sessionId].cards[1]
+      }
+
+      if (!players.some(p => Object.keys(p.cards).length > 0)) {
+        this.stateIndex = 0
+        this.dealCards()
+      } else {
+        this.activePlayerIndex += 1
+        let index = 0
+        let retries = 10
+        do {
+          retries--
+          index = playerIds.indexOf(this.state.currentTurn) + 1
+          this.state.currentTurn =
+            index >= playerIds.length ? playerIds[0] : playerIds[index]
+        } while (
+          Object.values(this.state.players[this.state.currentTurn].cards)
+            .length === 0 &&
+          retries > 0
+        )
+      }
 
       if (this.activePlayerIndex >= playerIds.length) {
         this.activePlayerIndex = 0
@@ -105,17 +155,19 @@ export class Poker extends Room<State> {
       }
       this.setAutoMoveTimeout()
     }
-    return this.state
   }
 
   setAutoMoveTimeout() {
     const sessionId = this.state.currentTurn
     const player = this.state.players[sessionId]
+    if (!player) {
+      return
+    }
     if (this.randomMoveTimeout) {
       this.randomMoveTimeout.clear()
     }
 
-    player.remainingMoveTime = 2
+    player.remainingMoveTime = 10
     this.randomMoveTimeout = this.clock.setInterval(() => {
       player.remainingMoveTime -= 1
 
@@ -132,6 +184,10 @@ export class Poker extends Room<State> {
     if (this.randomMoveTimeout) this.randomMoveTimeout.clear()
 
     const player = this.state.players[client.sessionId]
+    if (!player) {
+      return
+    }
+
     player.connected = false
 
     try {

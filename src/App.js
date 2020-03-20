@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './index.css'
 import './card.css'
-import { Players } from './components/Players'
+import { Room } from './components/Room'
 import { Card } from './components/Card'
 
 function App() {
@@ -85,7 +85,11 @@ function App() {
   return (
     <div>
       <div className="container">
-        <Players activeId={state.currentTurn} players={state.players} />
+        <Room
+          room={room}
+          activeId={state.currentTurn}
+          players={state.players}
+        />
         <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
           {state.cards.map((card, i) => (
             <Card
@@ -118,6 +122,8 @@ function Actions({ canMove, onAction }) {
       <button disabled={!canMove} onClick={() => onAction({ action: 'fold' })}>
         Fold
       </button>
+      <button onClick={() => onAction({ action: 'deal' })}>Deal</button>
+      <button onClick={() => onAction({ action: 'stand' })}>Leave seat</button>
     </div>
   )
 }
