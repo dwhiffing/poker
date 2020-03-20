@@ -57,7 +57,7 @@ export class Poker extends Room<Table> {
 
     if (consented) {
       player.fold()
-      this.state.players = this.getPlayers().filter(p => p.id !== player.id)
+      this.state.players = this.state.players.filter(p => p.id !== player.id)
       return
     }
 
@@ -150,13 +150,24 @@ export class Poker extends Room<Table> {
     }, 1000)
   }
 
-  getPlayers = () => this.state.players
+  getPlayers = () => [...this.state.players.values()]
 
   getPlayer = sessionId => this.getPlayers().find(p => p.id === sessionId)
 
   getActivePlayers = () => this.getSeatedPlayers().filter(p => p.inPlay)
 
-  getSeatedPlayers = () => this.getPlayers().filter(p => p.seatIndex > -1)
+  getSeatedPlayers = () => {
+    const sortedPlayers = this.getPlayers()
+      .filter(p => p.seatIndex > -1)
+      .sort((a, b) => a.seatIndex - b.seatIndex)
+
+    const dealerIndex = sortedPlayers.findIndex(p => p.dealer)
+
+    return [
+      ...sortedPlayers.slice(dealerIndex, sortedPlayers.length),
+      ...sortedPlayers.slice(0, dealerIndex),
+    ]
+  }
 
   getDealer() {
     let dealerPlayer = this.getSeatedPlayers().find(p => p.dealer)
