@@ -85,16 +85,15 @@ function App() {
   const currentPlayer = state.players.find(p => p.id === room.sessionId) || {}
   const numPlayers = state.players.filter(p => p.seatIndex > -1).length
   const activePlayers = state.players.filter(p => p.inPlay)
+  const getPlayer = seatIndex => {
+    const player = state.players.find(p => p.seatIndex === seatIndex)
+    return player ? { ...player, isClient: player.id === room.sessionId } : {}
+  }
 
   return (
     <div>
       <div className="container">
-        <Room
-          room={room}
-          activeId={state.currentTurn}
-          clientId={room.sessionId}
-          players={state.players}
-        />
+        <Room room={room} getPlayer={getPlayer} />
 
         <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
           {state.cards.map((card, i) => (

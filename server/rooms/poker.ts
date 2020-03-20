@@ -4,7 +4,6 @@ import { shuffleCards, handleReconnect } from '../utils'
 
 // TODO: need to handle turn logic when player disconnects (should wait for player to reconnect if its their turn)
 // TODO: need to allow players to leave manually and join specific rooms
-// TODO: need to make turn order go around table:
 // TODO: determine winner of hand
 // TOOD: Allow betting
 
@@ -81,7 +80,7 @@ export class Poker extends Room<Table> {
       this.state.cards.push(...this.deck.splice(-1, 1)) // river
     }
 
-    this.getPlayers().forEach(player => player.resetTurn())
+    this.getSeatedPlayers().forEach(player => player.resetTurn())
     this.setCurrentTurn(this.getDealer())
   }
 
@@ -104,9 +103,18 @@ export class Poker extends Room<Table> {
     }
   }
 
-  setCurrentTurn(player) {
-    this.state.currentTurn = player.id
-    this.setAutoMoveTimeout()
+  setCurrentTurn(player = null) {
+    const currentPlayer = this.getCurrentPlayer()
+    if (currentPlayer) {
+      currentPlayer.isTurn = false
+    }
+    if (player) {
+      this.state.currentTurn = player.id
+      player.isTurn = true
+      this.setAutoMoveTimeout()
+    } else {
+      this.state.currentTurn = ''
+    }
   }
 
   getCurrentPlayer() {
@@ -115,8 +123,8 @@ export class Poker extends Room<Table> {
 
   endGame() {
     this.state.cards = this.state.cards.filter(f => false)
-    this.state.currentTurn = ''
-    this.getPlayers().forEach(player => player.fold())
+    this.setCurrentTurn()
+    this.getSeatedPlayers().forEach(player => player.fold())
     if (this.moveTimeout) {
       this.moveTimeout.clear()
     }
@@ -145,12 +153,11 @@ export class Poker extends Room<Table> {
     }, 1000)
   }
 
-  getPlayers = () =>
-    this.state.players.sort((a, b) => a.seatIndex - b.seatIndex)
+  getPlayers = () => this.state.players
 
   getPlayer = sessionId => this.getPlayers().find(p => p.id === sessionId)
 
-  getActivePlayers = () => this.getPlayers().filter(p => p.inPlay)
+  getActivePlayers = () => this.getSeatedPlayers().filter(p => p.inPlay)
 
   getSeatedPlayers = () => this.getPlayers().filter(p => p.seatIndex > -1)
 

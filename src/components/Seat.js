@@ -1,13 +1,15 @@
 import React from 'react'
 import { Card } from './Card'
 
-export const Seat = ({ activeId, clientId, onSit, player = {} }) => {
+export const Seat = ({ onSit, player = {} }) => {
   const {
     id,
     remainingConnectionTime,
     remainingMoveTime,
     connected,
     money,
+    isTurn,
+    isClient,
     status,
     cards,
     dealer,
@@ -15,9 +17,9 @@ export const Seat = ({ activeId, clientId, onSit, player = {} }) => {
 
   return id ? (
     <div
-      className={`${activeId === id ? 'active' : ''} ${
-        clientId === id ? 'is-client' : ''
-      } ${!connected ? 'disconnected' : ''}`}
+      className={`${isTurn ? 'active' : ''} ${isClient ? 'is-client' : ''} ${
+        !connected ? 'disconnected' : ''
+      }`}
       style={{
         flex: 1,
         display: 'flex',
@@ -34,7 +36,7 @@ export const Seat = ({ activeId, clientId, onSit, player = {} }) => {
 
       {dealer && <p>dealer</p>}
 
-      {activeId === id && <p>{remainingMoveTime} seconds to play</p>}
+      {isTurn && <p>{remainingMoveTime} seconds to play</p>}
 
       {!connected && <p>{remainingConnectionTime} seconds to reconnect</p>}
 

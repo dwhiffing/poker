@@ -17,6 +17,9 @@ export class Player extends Schema {
   @type('boolean')
   dealer: boolean
 
+  @type('boolean')
+  isTurn: boolean
+
   @type('number')
   money: number
 
@@ -58,6 +61,7 @@ export class Player extends Schema {
 
   resetTurn() {
     this.turnPending = true
+    this.isTurn = false
   }
 
   giveCards(cards) {
