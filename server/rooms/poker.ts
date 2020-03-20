@@ -129,10 +129,7 @@ export class Poker extends Room<Table> {
       this.moveTimeout.clear()
     }
 
-    const currentDealer = this.getDealer()
-    const nextDealer = this.getPlayers().find(p => !p.dealer)
-    currentDealer.dealer = false
-    nextDealer.dealer = true
+    this.setDealer(this.getSeatedPlayers().find(p => !p.dealer))
   }
 
   setAutoMoveTimeout() {
@@ -141,7 +138,7 @@ export class Poker extends Room<Table> {
       this.moveTimeout.clear()
     }
 
-    player.remainingMoveTime = 1 || MOVE_TIME
+    player.remainingMoveTime = MOVE_TIME
     this.moveTimeout = this.clock.setInterval(() => {
       player.remainingMoveTime -= 1
 
@@ -162,12 +159,20 @@ export class Poker extends Room<Table> {
   getSeatedPlayers = () => this.getPlayers().filter(p => p.seatIndex > -1)
 
   getDealer() {
-    let dealerPlayer = this.getPlayers().find(p => p.dealer)
-    const seatedPlayer = this.getSeatedPlayers()[0]
-    if (!dealerPlayer && seatedPlayer) {
-      dealerPlayer = seatedPlayer
-      dealerPlayer.dealer = true
+    let dealerPlayer = this.getSeatedPlayers().find(p => p.dealer)
+    if (!dealerPlayer) {
+      this.setDealer(this.getSeatedPlayers()[0])
     }
     return dealerPlayer
+  }
+
+  setDealer(player) {
+    if (!player) return
+
+    this.getPlayers().forEach(p => {
+      p.dealer = false
+    })
+    player.dealer = true
+    return player
   }
 }
