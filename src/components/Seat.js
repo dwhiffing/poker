@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card } from './Card'
 
-export const Seat = ({ activeId, onSit, player = {} }) => {
+export const Seat = ({ activeId, clientId, onSit, player = {} }) => {
   const {
     id,
     remainingConnectionTime,
@@ -10,13 +10,14 @@ export const Seat = ({ activeId, onSit, player = {} }) => {
     money,
     status,
     cards,
+    dealer,
   } = player
 
   return id ? (
     <div
       className={`${activeId === id ? 'active' : ''} ${
-        !connected ? 'disconnected' : ''
-      }`}
+        clientId === id ? 'is-client' : ''
+      } ${!connected ? 'disconnected' : ''}`}
       style={{
         flex: 1,
         display: 'flex',
@@ -30,6 +31,8 @@ export const Seat = ({ activeId, onSit, player = {} }) => {
       <p>${money}</p>
 
       <p>{status}</p>
+
+      {dealer && <p>dealer</p>}
 
       {activeId === id && <p>{remainingMoveTime} seconds to play</p>}
 

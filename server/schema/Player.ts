@@ -1,4 +1,4 @@
-import { type, Schema, MapSchema } from '@colyseus/schema'
+import { type, Schema, ArraySchema } from '@colyseus/schema'
 import { Card } from './Card'
 
 export class Player extends Schema {
@@ -7,6 +7,15 @@ export class Player extends Schema {
 
   @type('boolean')
   connected: boolean
+
+  @type('boolean')
+  inPlay: boolean
+
+  @type('boolean')
+  turnPending: boolean
+
+  @type('boolean')
+  dealer: boolean
 
   @type('number')
   money: number
@@ -20,8 +29,8 @@ export class Player extends Schema {
   @type('number')
   remainingMoveTime: number
 
-  @type({ map: Card })
-  cards = new MapSchema<Card>()
+  @type([Card])
+  cards = new ArraySchema<Card>()
 
   constructor(id: string) {
     super()
@@ -30,6 +39,26 @@ export class Player extends Schema {
     this.remainingConnectionTime = 0
     this.remainingMoveTime = 0
     this.seatIndex = -1
+    this.cards = new ArraySchema<Card>()
     this.connected = true
+    this.inPlay = false
+    this.dealer = false
+    this.turnPending = false
+  }
+
+  fold() {
+    this.cards = this.cards.filter(() => false)
+    this.inPlay = false
+    this.turnPending = false
+  }
+
+  check() {
+    this.turnPending = false
+  }
+
+  giveCards(cards) {
+    this.inPlay = true
+    this.turnPending = true
+    this.cards.push(...cards)
   }
 }

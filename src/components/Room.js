@@ -1,7 +1,7 @@
 import React from 'react'
 import { Seat } from './Seat'
 
-export function Room({ activeId, players = [], room }) {
+export function Room({ activeId, clientId, players = [], room }) {
   const onSit = seatIndex => {
     room.send({ action: 'sit', seatIndex })
   }
@@ -11,16 +11,19 @@ export function Room({ activeId, players = [], room }) {
         <div className="blank-seat" />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 0)}
           onSit={() => onSit(0)}
         />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 1)}
           onSit={() => onSit(1)}
         />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 2)}
           onSit={() => onSit(2)}
         />
@@ -30,6 +33,7 @@ export function Room({ activeId, players = [], room }) {
       <div className="flex-1">
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 3)}
           onSit={() => onSit(3)}
         />
@@ -38,6 +42,7 @@ export function Room({ activeId, players = [], room }) {
         <div className="blank-seat" />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 4)}
           onSit={() => onSit(4)}
         />
@@ -46,6 +51,7 @@ export function Room({ activeId, players = [], room }) {
       <div className="flex-1">
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 5)}
           onSit={() => onSit(5)}
         />
@@ -54,6 +60,7 @@ export function Room({ activeId, players = [], room }) {
         <div className="blank-seat" />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 6)}
           onSit={() => onSit(6)}
         />
@@ -63,16 +70,19 @@ export function Room({ activeId, players = [], room }) {
         <div className="blank-seat" />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 7)}
           onSit={() => onSit(7)}
         />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 8)}
           onSit={() => onSit(8)}
         />
         <Seat
           activeId={activeId}
+          clientId={clientId}
           player={players.find(p => p.seatIndex === 9)}
           onSit={() => onSit(9)}
         />

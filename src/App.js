@@ -68,8 +68,6 @@ function App() {
     }
   }, [room])
 
-  console.log(state)
-
   useEffect(() => {
     connect()
   }, [])
@@ -81,6 +79,12 @@ function App() {
       </div>
     )
   }
+  console.log(state)
+
+  const canMove = state.currentTurn === room.sessionId
+  const currentPlayer = state.players.find(p => p.id === room.sessionId) || {}
+  const numPlayers = state.players.filter(p => p.seatIndex > -1).length
+  const activePlayers = state.players.filter(p => p.inPlay)
 
   return (
     <div>
@@ -88,8 +92,10 @@ function App() {
         <Room
           room={room}
           activeId={state.currentTurn}
+          clientId={room.sessionId}
           players={state.players}
         />
+
         <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
           {state.cards.map((card, i) => (
             <Card
@@ -102,28 +108,39 @@ function App() {
           ))}
         </div>
 
-        <Actions
-          onAction={obj => room.send(obj)}
-          canMove={state.currentTurn === room.sessionId}
-        />
+        <div style={{ display: 'flex', justifyContent: 'center', margin: 10 }}>
+          <button
+            disabled={!canMove}
+            onClick={() => room.send({ action: 'check' })}
+          >
+            Check
+          </button>
+          <button
+            disabled={!canMove}
+            onClick={() => room.send({ action: 'fold' })}
+          >
+            Fold
+          </button>
+          <button
+            disabled={
+              !currentPlayer.dealer ||
+              numPlayers < 2 ||
+              activePlayers.length > 0
+            }
+            onClick={() => room.send({ action: 'deal' })}
+          >
+            Deal
+          </button>
+          <button
+            disabled={currentPlayer.seatIndex === -1}
+            onClick={() => room.send({ action: 'stand' })}
+          >
+            Leave seat
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
 export default App
-
-function Actions({ canMove, onAction }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', margin: 10 }}>
-      <button disabled={!canMove} onClick={() => onAction({ action: 'check' })}>
-        Check
-      </button>
-      <button disabled={!canMove} onClick={() => onAction({ action: 'fold' })}>
-        Fold
-      </button>
-      <button onClick={() => onAction({ action: 'deal' })}>Deal</button>
-      <button onClick={() => onAction({ action: 'stand' })}>Leave seat</button>
-    </div>
-  )
-}
