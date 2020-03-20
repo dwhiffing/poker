@@ -62,6 +62,7 @@ export class Player extends Schema {
     this.inPlay = false
     this.dealer = false
     this.turnPending = false
+    this.dealerPending = true
   }
 
   fold() {
@@ -97,5 +98,10 @@ export class Player extends Schema {
     this.fold()
     this.seatIndex = -1
     this.dealer = false
+  }
+
+  makeDealer() {
+    this.dealerPending = false
+    this.dealer = true
   }
 }

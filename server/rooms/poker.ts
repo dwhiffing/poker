@@ -43,12 +43,11 @@ export class Poker extends Room<Table> {
       this.doNextPhase()
     } else if (data.action === 'sit') {
       player.sit(data.seatIndex)
+      this.getDealer()
     } else if (data.action === 'stand') {
       player.stand()
+      this.getDealer()
     }
-
-    // ensure dealer exists
-    this.getDealer()
   }
 
   onLeave = async (client, consented) => {
@@ -129,7 +128,7 @@ export class Poker extends Room<Table> {
       this.moveTimeout.clear()
     }
 
-    this.setDealer(this.getSeatedPlayers().find(p => !p.dealer))
+    this.setDealer()
   }
 
   setAutoMoveTimeout() {
@@ -172,18 +171,23 @@ export class Poker extends Room<Table> {
   getDealer() {
     let dealerPlayer = this.getSeatedPlayers().find(p => p.dealer)
     if (!dealerPlayer) {
-      this.setDealer(this.getSeatedPlayers()[0])
+      this.setDealer()
     }
     return dealerPlayer
   }
 
-  setDealer(player) {
-    if (!player) return
+  setDealer() {
+    let player = this.getSeatedPlayers().find(p => p.dealerPending)
 
     this.getPlayers().forEach(p => {
       p.dealer = false
+      if (!player) {
+        p.dealerPending = true
+      }
     })
-    player.dealer = true
+    if (!player) player = this.getSeatedPlayers().find(p => p.dealerPending)
+
+    player.makeDealer()
     return player
   }
 }
