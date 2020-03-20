@@ -56,11 +56,17 @@ export class Poker extends Room<Table> {
 
     if (consented) {
       player.fold()
-      this.state.players = this.state.players.filter(p => p.id !== player.id)
+      this.removePlayer(player.id)
       return
     }
 
-    await handleReconnect(this.allowReconnection(client), player)
+    await handleReconnect(this.allowReconnection(client), player, () =>
+      this.removePlayer(player.id),
+    )
+  }
+
+  removePlayer(id) {
+    this.state.players = this.state.players.filter(p => p.id !== id)
   }
 
   doNextPhase() {

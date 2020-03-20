@@ -13,7 +13,7 @@ export const shuffleCards = () =>
     .map((d, i) => ({ ...d, index: i }))
     .map(card => new Card(card.value, card.suit, card.index))
 
-export const handleReconnect = async (reconnection, player) => {
+export const handleReconnect = async (reconnection, player, onDisconnect) => {
   player.remainingConnectionTime = RECONNECT_TIME
   const interval = setInterval(() => {
     if (!player) return clearInterval(interval)
@@ -21,6 +21,7 @@ export const handleReconnect = async (reconnection, player) => {
     player.remainingConnectionTime -= 1
     if (player.remainingConnectionTime === 0) {
       reconnection.reject()
+      onDisconnect()
       clearInterval(interval)
     }
   }, 1000)
