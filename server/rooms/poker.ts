@@ -4,7 +4,7 @@ import { shuffleCards, handleReconnect } from '../utils'
 
 // TODO: need to handle turn logic when player disconnects (should wait for player to reconnect if its their turn)
 // TODO: need to allow players to leave manually and join specific rooms
-// TODO: need to make turn order go around table: const turnOrder = [0,1,2,4,6,9,8,7,5,3]
+// TODO: need to make turn order go around table:
 // TODO: determine winner of hand
 // TOOD: Allow betting
 
@@ -24,7 +24,7 @@ export class Poker extends Room<Table> {
 
     this.state.players.push(new Player(client.sessionId))
 
-    if (this.state.players.length === 10) {
+    if (this.getPlayers().length === 10) {
       this.lock()
     }
   }
@@ -58,9 +58,7 @@ export class Poker extends Room<Table> {
 
     if (consented) {
       player.fold()
-      this.state.players = this.state.players.filter(
-        p => p.id !== client.sessionId,
-      )
+      this.state.players = this.getPlayers().filter(p => p.id !== player.id)
       return
     }
 
@@ -83,7 +81,7 @@ export class Poker extends Room<Table> {
       this.state.cards.push(...this.deck.splice(-1, 1)) // river
     }
 
-    this.state.players.forEach(player => player.resetTurn())
+    this.getPlayers().forEach(player => player.resetTurn())
     this.setCurrentTurn(this.getDealer())
   }
 
@@ -118,13 +116,13 @@ export class Poker extends Room<Table> {
   endGame() {
     this.state.cards = this.state.cards.filter(f => false)
     this.state.currentTurn = ''
-    this.state.players.forEach(player => player.fold())
+    this.getPlayers().forEach(player => player.fold())
     if (this.moveTimeout) {
       this.moveTimeout.clear()
     }
 
     const currentDealer = this.getDealer()
-    const nextDealer = this.state.players.find(p => !p.dealer)
+    const nextDealer = this.getPlayers().find(p => !p.dealer)
     currentDealer.dealer = false
     nextDealer.dealer = true
   }
@@ -147,16 +145,20 @@ export class Poker extends Room<Table> {
     }, 1000)
   }
 
-  getPlayer = sessionId => this.state.players.find(p => p.id === sessionId)
+  getPlayers = () =>
+    this.state.players.sort((a, b) => a.seatIndex - b.seatIndex)
 
-  getActivePlayers = () => this.state.players.filter(p => p.inPlay)
+  getPlayer = sessionId => this.getPlayers().find(p => p.id === sessionId)
 
-  getSeatedPlayers = () => this.state.players.filter(p => p.seatIndex > -1)
+  getActivePlayers = () => this.getPlayers().filter(p => p.inPlay)
+
+  getSeatedPlayers = () => this.getPlayers().filter(p => p.seatIndex > -1)
 
   getDealer() {
-    let dealerPlayer = this.state.players.find(p => p.dealer)
-    if (!dealerPlayer) {
-      dealerPlayer = this.getSeatedPlayers()[0]
+    let dealerPlayer = this.getPlayers().find(p => p.dealer)
+    const seatedPlayer = this.getSeatedPlayers()[0]
+    if (!dealerPlayer && seatedPlayer) {
+      dealerPlayer = seatedPlayer
       dealerPlayer.dealer = true
     }
     return dealerPlayer
