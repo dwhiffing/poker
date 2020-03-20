@@ -1,4 +1,5 @@
 import shuffle from 'lodash/shuffle'
+import { Card } from '../schema'
 
 const RECONNECT_TIME = 30
 
@@ -8,7 +9,9 @@ const orderedCards = new Array(52).fill('').map((_, i) => ({
 }))
 
 export const shuffleCards = () =>
-  shuffle(orderedCards).map((d, i) => ({ ...d, index: i }))
+  shuffle(orderedCards)
+    .map((d, i) => ({ ...d, index: i }))
+    .map(card => new Card(card.value, card.suit, card.index))
 
 export const handleReconnect = async (reconnection, player) => {
   player.remainingConnectionTime = RECONNECT_TIME

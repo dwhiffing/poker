@@ -56,9 +56,27 @@ export class Player extends Schema {
     this.turnPending = false
   }
 
+  resetTurn() {
+    this.turnPending = true
+  }
+
   giveCards(cards) {
     this.inPlay = true
     this.turnPending = true
     this.cards.push(...cards)
+  }
+
+  sit(seatIndex) {
+    if (this.seatIndex > -1) return
+
+    this.seatIndex = seatIndex
+  }
+
+  stand() {
+    if (this.seatIndex === -1) return
+
+    this.fold()
+    this.seatIndex = -1
+    this.dealer = false
   }
 }

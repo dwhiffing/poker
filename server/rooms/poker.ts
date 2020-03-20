@@ -1,7 +1,5 @@
 import { Room, Delayed, Client } from 'colyseus'
-import { type, Schema, MapSchema, ArraySchema } from '@colyseus/schema'
-import { Player } from '../schema/Player'
-import { Card } from '../schema/Card'
+import { Player, Table } from '../schema'
 import { shuffleCards, handleReconnect } from '../utils'
 
 // TODO: need to handle turn logic when player disconnects (should wait for player to reconnect if its their turn)
@@ -12,30 +10,18 @@ import { shuffleCards, handleReconnect } from '../utils'
 
 const MOVE_TIME = 30
 
-class State extends Schema {
-  @type('string')
-  currentTurn: string
-
-  @type([Player])
-  players = new ArraySchema<Player>()
-
-  @type([Card])
-  cards = new ArraySchema<Card>()
-}
-
-export class Poker extends Room<State> {
+export class Poker extends Room<Table> {
   maxClients = 10
   moveTimeout: Delayed
   deck = []
 
   onCreate() {
-    this.setState(new State())
+    this.setState(new Table())
   }
 
   onJoin(client: Client) {
-    if (this.state.players.find(p => p.id === client.sessionId)) {
-      return
-    }
+    if (this.getPlayer(client.sessionId)) return
+
     this.state.players.push(new Player(client.sessionId))
 
     if (this.state.players.length === 10) {
@@ -46,20 +32,24 @@ export class Poker extends Room<State> {
   onMessage(client: Client, data: any) {
     const player = this.getPlayer(client.sessionId)
     const isTheirTurn = client.sessionId === this.state.currentTurn
+    const canDeal = this.getActivePlayers().length === 0 && player.dealer
 
     if (data.action === 'check' && isTheirTurn) {
       player.check()
-      this.determineNextPlayer()
+      this.doNextTurn()
     } else if (data.action === 'fold' && isTheirTurn) {
       player.fold()
-      this.determineNextPlayer()
-    } else if (data.action === 'deal') {
-      this.dealCards()
+      this.doNextTurn()
+    } else if (data.action === 'deal' && canDeal) {
+      this.doNextPhase()
     } else if (data.action === 'sit') {
-      this.takeSeat(client.sessionId, data.seatIndex)
+      player.sit(data.seatIndex)
     } else if (data.action === 'stand') {
-      this.leaveSeat(client.sessionId)
+      player.stand()
     }
+
+    // ensure dealer exists
+    this.getDealer()
   }
 
   onLeave = async (client, consented) => {
@@ -77,30 +67,14 @@ export class Poker extends Room<State> {
     await handleReconnect(this.allowReconnection(client), player)
   }
 
-  takeSeat(sessionId, seatIndex) {
-    const player = this.getPlayer(sessionId)
-    if (player.seatIndex > -1) {
-      return
-    }
-    player.seatIndex = seatIndex
-    if (!this.getDealer()) {
-      player.dealer = true
-    }
-  }
-
-  leaveSeat(sessionId) {
-    const player = this.getPlayer(sessionId)
-    player.fold()
-    player.seatIndex = -1
-  }
-
-  dealCards() {
-    this.state.players.forEach(player => {
-      player.turnPending = true
-    })
-
-    if (this.getActivePlayers().length === 0) {
-      this.dealNewHand()
+  doNextPhase() {
+    if (this.state.cards.length === 5) {
+      this.endGame()
+    } else if (this.getActivePlayers().length === 0) {
+      this.deck = shuffleCards()
+      this.getSeatedPlayers().forEach(player => {
+        player.giveCards(this.deck.splice(-2, 2))
+      })
     } else if (this.state.cards.length === 0) {
       this.state.cards.push(...this.deck.splice(-3, 3)) // flop
     } else if (this.state.cards.length === 3) {
@@ -109,39 +83,31 @@ export class Poker extends Room<State> {
       this.state.cards.push(...this.deck.splice(-1, 1)) // river
     }
 
-    this.state.currentTurn = this.state.players.find(p => p.dealer).id
-
-    this.setAutoMoveTimeout()
+    this.state.players.forEach(player => player.resetTurn())
+    this.setCurrentTurn(this.getDealer())
   }
 
-  dealNewHand() {
-    this.deck = shuffleCards().map(
-      card => new Card(card.value, card.suit, card.index),
-    )
+  doNextTurn() {
+    const activePlayers = this.getActivePlayers()
+    const nextPlayer = activePlayers.find(p => p.turnPending)
 
-    this.getSeatedPlayers().forEach(player => {
-      player.giveCards(this.deck.splice(-2, 2))
-    })
-  }
-
-  determineNextPlayer() {
-    const remainingPlayers = this.state.players.filter(p => p.inPlay)
-
-    if (remainingPlayers.length === 1) {
+    if (activePlayers.length === 1) {
       return this.endGame()
     }
 
-    const nextPlayer = remainingPlayers.find(p => p.turnPending)
-
-    if (!nextPlayer) {
+    if (nextPlayer) {
+      this.setCurrentTurn(nextPlayer)
+    } else {
       if (this.state.cards.length === 5) {
-        return this.endGame()
+        this.endGame()
+      } else {
+        this.doNextPhase()
       }
-      return this.dealCards()
     }
+  }
 
-    this.state.currentTurn = nextPlayer.id
-
+  setCurrentTurn(player) {
+    this.state.currentTurn = player.id
     this.setAutoMoveTimeout()
   }
 
@@ -157,7 +123,7 @@ export class Poker extends Room<State> {
       this.moveTimeout.clear()
     }
 
-    const currentDealer = this.state.players.find(p => p.dealer)
+    const currentDealer = this.getDealer()
     const nextDealer = this.state.players.find(p => !p.dealer)
     currentDealer.dealer = false
     nextDealer.dealer = true
@@ -181,19 +147,18 @@ export class Poker extends Room<State> {
     }, 1000)
   }
 
-  getPlayer(sessionId) {
-    return this.state.players.find(p => p.id === sessionId)
-  }
+  getPlayer = sessionId => this.state.players.find(p => p.id === sessionId)
 
-  getActivePlayers() {
-    return this.state.players.filter(p => p.inPlay)
-  }
+  getActivePlayers = () => this.state.players.filter(p => p.inPlay)
 
-  getSeatedPlayers() {
-    return this.state.players.filter(p => p.seatIndex > -1)
-  }
+  getSeatedPlayers = () => this.state.players.filter(p => p.seatIndex > -1)
 
   getDealer() {
-    return this.state.players.find(p => p.dealer)
+    let dealerPlayer = this.state.players.find(p => p.dealer)
+    if (!dealerPlayer) {
+      dealerPlayer = this.getSeatedPlayers()[0]
+      dealerPlayer.dealer = true
+    }
+    return dealerPlayer
   }
 }
