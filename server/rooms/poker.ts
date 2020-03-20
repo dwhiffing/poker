@@ -187,7 +187,9 @@ export class Poker extends Room<Table> {
     })
     if (!player) player = this.getSeatedPlayers().find(p => p.dealerPending)
 
-    player.makeDealer()
-    return player
+    if (player) {
+      player.makeDealer()
+      return player
+    }
   }
 }
