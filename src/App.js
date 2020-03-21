@@ -144,20 +144,9 @@ function App() {
         <Room
           canSit={currentPlayer.seatIndex === -1}
           room={room}
+          cards={state.cards}
           getPlayer={getPlayer}
         />
-
-        <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
-          {state.cards.map((card, i) => (
-            <Card
-              key={card.index}
-              x={20 * i - 70}
-              y={-50}
-              scale={0.6}
-              card={card}
-            />
-          ))}
-        </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: 10 }}>
           <Button
@@ -190,6 +179,9 @@ function App() {
             disabled={currentPlayer.seatIndex === -1}
             onClick={() => room.send({ action: 'stand' })}
           >
+            Stand
+          </Button>
+          <Button variant="contained" onClick={() => room.leave()}>
             Leave
           </Button>
         </div>
