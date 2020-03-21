@@ -18,7 +18,7 @@ export function Room({ getPlayer, room, cards, canSit }) {
       <div className="flex-1" style={{ flex: 2 }}>
         <div className="flex-1" style={{ flexDirection: 'column' }}>
           <Seat position="left" player={getPlayer(9)} onSit={onSit(9)} />
-          <Seat position="left" player={getPlayer(3)} onSit={onSit(3)} />
+          <Seat position="left" player={getPlayer(8)} onSit={onSit(8)} />
         </div>
         <div
           className="flex-1"
@@ -29,7 +29,7 @@ export function Room({ getPlayer, room, cards, canSit }) {
           ))}
         </div>
         <div className="flex-1" style={{ flexDirection: 'column' }}>
-          <Seat position="right" player={getPlayer(8)} onSit={onSit(8)} />
+          <Seat position="right" player={getPlayer(3)} onSit={onSit(3)} />
           <Seat position="right" player={getPlayer(4)} onSit={onSit(4)} />
         </div>
       </div>

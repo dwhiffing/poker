@@ -48,7 +48,7 @@ function App() {
     }
 
     localStorage.setItem('name', name)
-    room.send({ action: 'setName', data: { name } })
+    room.send({ action: 'setName', name })
 
     setRoom(room)
   }

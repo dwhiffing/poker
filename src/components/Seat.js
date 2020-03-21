@@ -56,8 +56,11 @@ export const Seat = ({ onSit, position, player = {} }) => {
             {/* <p>{status}</p> */}
 
             {dealer && <DealerChip />}
-            {!connected && <TimeChip time={remainingConnectionTime} />}
-            {isTurn && <TimeChip time={remainingMoveTime} />}
+            {isTurn && (
+              <TimeChip
+                time={!connected ? remainingConnectionTime : remainingMoveTime}
+              />
+            )}
 
             <Cards cards={cards} position={position} />
           </Box>
@@ -134,7 +137,7 @@ function DealerChip({}) {
       borderRadius={15}
       position="absolute"
       right={-5}
-      bottom={-25}
+      top={-25}
       style={{
         backgroundColor: 'white',
         color: 'green',
