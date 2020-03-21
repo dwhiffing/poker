@@ -3,6 +3,7 @@ import './index.css'
 import './card.css'
 import { Room } from './components/Room'
 import { Card } from './components/Card'
+import { Box, Typography, Button } from '@material-ui/core'
 
 function App() {
   const intervalRef = useRef()
@@ -86,25 +87,43 @@ function App() {
 
   useEffect(() => {
     getAvailableRooms()
-    intervalRef.current = setInterval(getAvailableRooms, 1000)
+    intervalRef.current = setInterval(getAvailableRooms, 3000)
   }, [])
 
   if (!room) {
     return (
-      <div>
-        {availableRooms.length === 0 && <p>No rooms available</p>}
-        {availableRooms.map(room => (
-          <div key={room.roomId}>
-            <p
-              style={{ cursor: 'pointer' }}
-              onClick={() => joinRoom(room.roomId)}
-            >
-              {room.roomId}
-            </p>
-          </div>
-        ))}
-        <button onClick={createRoom}>Create room</button>
-      </div>
+      <Box
+        height="100vh"
+        flexDirection="column"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Typography variant="h5">Available Tables:</Typography>
+
+        <Box
+          minHeight={200}
+          flexDirection="column"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+        >
+          {availableRooms.length === 0 && <p>No rooms available</p>}
+          {availableRooms.map(room => (
+            <div key={room.roomId}>
+              <p
+                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                onClick={() => joinRoom(room.roomId)}
+              >
+                Table: {room.roomId}
+              </p>
+            </div>
+          ))}
+        </Box>
+        <Button variant="contained" onClick={createRoom}>
+          Create room
+        </Button>
+      </Box>
     )
   }
 
@@ -120,16 +139,20 @@ function App() {
   }
 
   return (
-    <div>
+    <div className="outer">
       <div className="container">
-        <Room room={room} getPlayer={getPlayer} />
+        <Room
+          canSit={currentPlayer.seatIndex === -1}
+          room={room}
+          getPlayer={getPlayer}
+        />
 
         <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
           {state.cards.map((card, i) => (
             <Card
               key={card.index}
-              x={20 * i - 50}
-              y={-20}
+              x={20 * i - 70}
+              y={-50}
               scale={0.6}
               card={card}
             />
@@ -137,19 +160,22 @@ function App() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: 10 }}>
-          <button
+          <Button
+            variant="contained"
             disabled={!canMove}
             onClick={() => room.send({ action: 'check' })}
           >
             Check
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="contained"
             disabled={!canMove}
             onClick={() => room.send({ action: 'fold' })}
           >
             Fold
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="contained"
             disabled={
               !currentPlayer.dealer ||
               numPlayers < 2 ||
@@ -158,13 +184,14 @@ function App() {
             onClick={() => room.send({ action: 'deal' })}
           >
             Deal
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="contained"
             disabled={currentPlayer.seatIndex === -1}
             onClick={() => room.send({ action: 'stand' })}
           >
-            Leave seat
-          </button>
+            Leave
+          </Button>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { shuffleCards, handleReconnect } from '../utils'
 // TODO: need to allow players to leave manually and join specific rooms
 // TODO: determine winner of hand
 // TOOD: Allow betting
+// TODO: show cards for a bit after round end, select winner
 
 const MOVE_TIME = 30
 

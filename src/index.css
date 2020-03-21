@@ -26,6 +26,9 @@ body {
   width: 100vw;
   display: flex;
   flex-direction: column;
+  max-width: 940px;
+  max-height: 770px;
+  margin: 0px auto;
 }
 
 .player-container {
@@ -52,4 +55,11 @@ body {
 
 .is-client {
   border: 1px solid white;
+}
+
+.outer {
+  justify-content: center;
+  display: flex;
+  height: 100vh;
+  align-items: center;
 }

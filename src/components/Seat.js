@@ -1,5 +1,6 @@
 import React from 'react'
 import { Card } from './Card'
+import { Button, Box } from '@material-ui/core'
 
 export const Seat = ({ onSit, player = {} }) => {
   const {
@@ -15,49 +16,60 @@ export const Seat = ({ onSit, player = {} }) => {
     dealer,
   } = player
 
-  return id ? (
-    <div
-      className={`${isTurn ? 'active' : ''} ${isClient ? 'is-client' : ''} ${
-        !connected ? 'disconnected' : ''
-      }`}
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <p>{id}</p>
+  return (
+    <Box flex={1} display="flex" justifyContent="center" alignItems="center">
+      <Box
+        width={100}
+        height={100}
+        m={1}
+        borderRadius={50}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        style={{
+          border: `${isClient ? 2 : 0}px solid white`,
+          backgroundColor: isTurn
+            ? 'rgba(255,255,255,0.5)'
+            : 'rgba(255,255,255,0.1)',
+        }}
+      >
+        {id ? (
+          <div
+            style={{
+              position: 'relative',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <p>{id}</p>
 
-      <p>${money}</p>
+            {/* <p>${money}</p> */}
 
-      <p>{status}</p>
+            {/* <p>{status}</p> */}
 
-      {dealer && <p>dealer</p>}
+            {/* {dealer && <p>dealer</p>} */}
 
-      {isTurn && <p>{remainingMoveTime} seconds to play</p>}
+            <p>
+              {!connected
+                ? remainingConnectionTime
+                : isTurn
+                ? remainingMoveTime
+                : ' '}
+            </p>
 
-      {!connected && <p>{remainingConnectionTime} seconds to reconnect</p>}
-
-      <div style={{ position: 'relative' }}>
-        {cards.map((card, i) => (
-          <Card key={i} x={20 * i} y={0} scale={0.6} card={card} />
-        ))}
-      </div>
-    </div>
-  ) : (
-    <div
-      onClick={onSit}
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <p>Empty seat</p>
-    </div>
+            <div style={{ position: 'absolute', top: 0, left: 0 }}>
+              {cards.map((card, i) => (
+                <Card key={i} x={20 * i + 10} y={80} scale={0.6} card={card} />
+              ))}
+            </div>
+          </div>
+        ) : onSit ? (
+          <Button onClick={onSit}>Sit</Button>
+        ) : null}
+      </Box>
+    </Box>
   )
 }
