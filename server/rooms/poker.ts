@@ -1,6 +1,6 @@
 import { Room, Delayed, Client } from 'colyseus'
 import { Player, Table } from '../schema'
-import { shuffleCards, handleReconnect } from '../utils'
+import { shuffleCards } from '../utils'
 
 // TODO: need to handle turn logic when player disconnects (should wait for player to reconnect if its their turn)
 // TODO: need to allow players to leave manually and join specific rooms
@@ -9,6 +9,7 @@ import { shuffleCards, handleReconnect } from '../utils'
 // TODO: show cards for a bit after round end, select winner
 
 const MOVE_TIME = 30
+const RECONNECT_TIME = 30
 
 export class Poker extends Room<Table> {
   maxClients = 10
@@ -63,22 +64,39 @@ export class Poker extends Room<Table> {
     player.connected = false
 
     if (consented) {
-      player.fold()
-      this.removePlayer(player.id)
+      this.removePlayer(player)
       return
     }
 
-    await handleReconnect(this.allowReconnection(client), player, () => {
-      player.fold()
-      if (client.sessionId === player.id) {
-        this.doNextTurn()
+    const reconnection = this.allowReconnection(client)
+
+    player.remainingConnectionTime = RECONNECT_TIME
+    const interval = setInterval(() => {
+      if (!player) return clearInterval(interval)
+
+      player.remainingConnectionTime -= 1
+      if (player.remainingConnectionTime === 0) {
+        this.removePlayer(player)
+        reconnection.reject()
+        clearInterval(interval)
       }
-      this.removePlayer(player.id)
-    })
+    }, 1000)
+
+    await reconnection
+    player.connected = true
+    clearInterval(interval)
   }
 
-  removePlayer(id) {
-    this.state.players = this.state.players.filter(p => p.id !== id)
+  removePlayer(player) {
+    const currentPlayer = this.getCurrentPlayer()
+    player.fold()
+    this.state.players = this.state.players.filter(p => p.id !== player.id)
+
+    if (this.getActivePlayers().length === 1) {
+      return this.endGame()
+    } else if (currentPlayer && currentPlayer.id === player.id) {
+      this.doNextTurn()
+    }
   }
 
   doNextPhase() {
@@ -128,12 +146,17 @@ export class Poker extends Room<Table> {
     if (currentPlayer) {
       currentPlayer.isTurn = false
     }
+
+    if (!player) {
+      if (this.getActivePlayers().length === 0) {
+        this.state.currentTurn = ''
+      }
+    }
+
     if (player) {
       this.state.currentTurn = player.id
       player.isTurn = true
       this.setAutoMoveTimeout()
-    } else {
-      this.state.currentTurn = ''
     }
   }
 
@@ -170,16 +193,15 @@ export class Poker extends Room<Table> {
     }, 1000)
   }
 
-  getPlayers = () => [...this.state.players.values()]
+  getPlayers = () =>
+    [...this.state.players.values()].sort((a, b) => a.seatIndex - b.seatIndex)
 
   getPlayer = sessionId => this.getPlayers().find(p => p.id === sessionId)
 
   getActivePlayers = () => this.getSeatedPlayers().filter(p => p.inPlay)
 
   getSeatedPlayers = () => {
-    const sortedPlayers = this.getPlayers()
-      .filter(p => p.seatIndex > -1)
-      .sort((a, b) => a.seatIndex - b.seatIndex)
+    const sortedPlayers = this.getPlayers().filter(p => p.seatIndex > -1)
 
     const dealerIndex = sortedPlayers.findIndex(p => p.dealer)
 
@@ -198,7 +220,9 @@ export class Poker extends Room<Table> {
   }
 
   setDealer() {
-    let player = this.getSeatedPlayers().find(p => p.dealerPending)
+    let player = this.getSeatedPlayers()
+      .filter(p => p.connected)
+      .find(p => p.dealerPending)
 
     this.getPlayers().forEach(p => {
       p.dealer = false
@@ -206,7 +230,10 @@ export class Poker extends Room<Table> {
         p.dealerPending = true
       }
     })
-    if (!player) player = this.getSeatedPlayers().find(p => p.dealerPending)
+    if (!player)
+      player = this.getSeatedPlayers()
+        .filter(p => p.connected)
+        .find(p => p.dealerPending)
 
     if (player) {
       player.makeDealer()
