@@ -3,7 +3,7 @@ import { Card } from './Card'
 import { Button, Box, Typography } from '@material-ui/core'
 import { Flex } from '.'
 
-export const Seat = ({ onSit, position, player = {} }) => {
+export const Seat = ({ onSit, player = {} }) => {
   const {
     id,
     remainingConnectionTime,
@@ -27,9 +27,9 @@ export const Seat = ({ onSit, position, player = {} }) => {
   return (
     <Flex variant="center">
       <Flex
-        flex={/top|bottom/.test(position) ? 0.6 : 0.5}
-        minWidth={60}
-        className="square"
+        flex={0}
+        minWidth={80}
+        minHeight={80}
         borderRadius="50%"
         variant="center"
         position="relative"
@@ -49,7 +49,7 @@ export const Seat = ({ onSit, position, player = {} }) => {
               />
             )}
 
-            <Cards isClient={isClient} cards={cards} position={position} />
+            <Cards isClient={isClient} cards={cards} />
           </>
         ) : (
           <Button disabled={!onSit} onClick={onSit}>
@@ -61,7 +61,7 @@ export const Seat = ({ onSit, position, player = {} }) => {
   )
 }
 
-function Cards({ isClient, cards, position }) {
+function Cards({ isClient, cards }) {
   return (
     <Box position="absolute" display="flex" justifyContent="center">
       {cards.map((card, i) => (
@@ -69,7 +69,7 @@ function Cards({ isClient, cards, position }) {
           <Card
             key={i}
             card={card}
-            scale={isClient ? 0.8 : 0.6}
+            scale={isClient ? 0.7 : 0.4}
             style={{ position: 'relative', zIndex: isClient ? 10 : 1 }}
           />
         </Box>
@@ -92,6 +92,7 @@ function TimeChip({ time }) {
       bottom={-5}
       style={{
         zIndex: 20,
+        boxShadow: 'rgba(0,0,0,0.5) 0px 0px 3px',
         backgroundColor: 'white',
         color: 'green',
       }}
@@ -115,6 +116,7 @@ function DealerChip() {
       top={-5}
       style={{
         zIndex: 20,
+        boxShadow: 'rgba(0,0,0,0.5) 0px 0px 3px',
         backgroundColor: 'white',
         color: 'green',
       }}

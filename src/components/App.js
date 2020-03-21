@@ -38,9 +38,20 @@ function App() {
     return <Lobby setRoom={setRoom} />
   }
 
+  console.log({ cards, players, currentTurn })
+
   return (
-    <Flex variant="column center" style={{ height: 'calc(100vh - 60px)' }}>
-      <Room room={room} cards={cards} players={players} />
+    <Flex
+      variant="column center"
+      style={{ height: 'calc(100vh - 120px)', marginTop: 60 }}
+    >
+      <Room
+        room={room}
+        cards={cards}
+        players={players
+          .map(p => ({ ...p, isClient: p.id === room.sessionId }))
+          .sort((a, b) => a.seatIndex - b.seatIndex)}
+      />
       <Actions room={room} currentTurn={currentTurn} players={players} />
     </Flex>
   )
