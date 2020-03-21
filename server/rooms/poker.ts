@@ -49,6 +49,9 @@ export class Poker extends Room<Table> {
       this.getDealer()
     } else if (data.action === 'stand') {
       player.stand()
+      if (this.getActivePlayers().length === 1) {
+        this.endGame()
+      }
       this.getDealer()
     } else if (data.action === 'setName') {
       player.setName(data.name)
@@ -65,9 +68,13 @@ export class Poker extends Room<Table> {
       return
     }
 
-    await handleReconnect(this.allowReconnection(client), player, () =>
-      this.removePlayer(player.id),
-    )
+    await handleReconnect(this.allowReconnection(client), player, () => {
+      player.fold()
+      if (client.sessionId === player.id) {
+        this.doNextTurn()
+      }
+      this.removePlayer(player.id)
+    })
   }
 
   removePlayer(id) {
