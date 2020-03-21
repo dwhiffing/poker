@@ -1,6 +1,7 @@
 import React from 'react'
 import { Card } from './Card'
-import { Button, Box } from '@material-ui/core'
+import { Button, Box, Typography } from '@material-ui/core'
+import { Flex } from '.'
 
 export const Seat = ({ onSit, position, player = {} }) => {
   const {
@@ -8,10 +9,8 @@ export const Seat = ({ onSit, position, player = {} }) => {
     remainingConnectionTime,
     remainingMoveTime,
     connected,
-    money,
     isTurn,
     isClient,
-    status,
     name,
     cards,
     dealer,
@@ -26,34 +25,22 @@ export const Seat = ({ onSit, position, player = {} }) => {
   }
 
   return (
-    <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-      <Box
-        width={100}
-        height={100}
-        m={1}
-        borderRadius={50}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
+    <Flex variant="center">
+      <Flex
+        flex={/top|bottom/.test(position) ? 0.6 : 0.5}
+        minWidth={60}
+        className="square"
+        borderRadius="50%"
+        variant="center"
+        position="relative"
         style={{
           border: `${isClient ? 2 : 0}px solid white`,
           backgroundColor,
         }}
       >
         {id ? (
-          <Box
-            position="relative"
-            flex={1}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <p>{name || id}</p>
-
-            {/* <p>${money}</p> */}
-
-            {/* <p>{status}</p> */}
+          <>
+            <Typography>{name || id}</Typography>
 
             {dealer && <DealerChip />}
             {isTurn && (
@@ -62,45 +49,32 @@ export const Seat = ({ onSit, position, player = {} }) => {
               />
             )}
 
-            <Cards cards={cards} position={position} />
-          </Box>
-        ) : onSit ? (
-          <Button onClick={onSit}>Sit</Button>
-        ) : null}
-      </Box>
-    </Box>
+            <Cards isClient={isClient} cards={cards} position={position} />
+          </>
+        ) : (
+          <Button disabled={!onSit} onClick={onSit}>
+            Sit
+          </Button>
+        )}
+      </Flex>
+    </Flex>
   )
 }
 
-function Cards({ cards, position }) {
+function Cards({ isClient, cards, position }) {
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
+    <Box position="absolute" display="flex" justifyContent="center">
       {cards.map((card, i) => (
-        <div
-          key={`card-${i}`}
-          style={{
-            width: i === 0 ? 15 : null,
-          }}
-        >
+        <Box key={`card-${i}`} width={i === 0 ? 15 : null}>
           <Card
             key={i}
             card={card}
-            y={position === 'top' ? 100 : position === 'bottom' ? -100 : 0}
-            x={position === 'left' ? 100 : position === 'right' ? -100 : 0}
-            scale={0.8}
+            scale={isClient ? 0.8 : 0.6}
+            style={{ position: 'relative', zIndex: isClient ? 10 : 1 }}
           />
-        </div>
+        </Box>
       ))}
-    </div>
+    </Box>
   )
 }
 
@@ -115,8 +89,9 @@ function TimeChip({ time }) {
       borderRadius={15}
       position="absolute"
       right={-5}
-      bottom={-25}
+      bottom={-5}
       style={{
+        zIndex: 20,
         backgroundColor: 'white',
         color: 'green',
       }}
@@ -126,7 +101,7 @@ function TimeChip({ time }) {
   )
 }
 
-function DealerChip({}) {
+function DealerChip() {
   return (
     <Box
       display="flex"
@@ -137,8 +112,9 @@ function DealerChip({}) {
       borderRadius={15}
       position="absolute"
       right={-5}
-      top={-25}
+      top={-5}
       style={{
+        zIndex: 20,
         backgroundColor: 'white',
         color: 'green',
       }}

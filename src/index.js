@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import App from './App'
+import App from './components/App'
 import { Client } from 'colyseus.js'
 
 window.colyseus = new Client('ws://localhost:3553')
