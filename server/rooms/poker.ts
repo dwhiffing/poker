@@ -79,9 +79,12 @@ export class Poker extends Room<Table> {
       this.endGame()
     } else if (this.getActivePlayers().length === 0) {
       this.deck = shuffleCards()
-      this.getSeatedPlayers().forEach(player => {
-        player.giveCards(this.deck.splice(-2, 2))
-      })
+      this.state.cards = this.state.cards.filter(f => false)
+      this.getSeatedPlayers()
+        .filter(p => p.connected)
+        .forEach(player => {
+          player.giveCards(this.deck.splice(-2, 2))
+        })
     } else if (this.state.cards.length === 0) {
       this.state.cards.push(...this.deck.splice(-3, 3)) // flop
     } else if (this.state.cards.length === 3) {
