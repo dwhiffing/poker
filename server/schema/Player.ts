@@ -6,6 +6,9 @@ export class Player extends Schema {
   @type('string')
   id: string
 
+  @type('string')
+  name: string
+
   // is player currently connected
   @type('boolean')
   connected: boolean
@@ -103,5 +106,9 @@ export class Player extends Schema {
   makeDealer() {
     this.dealerPending = false
     this.dealer = true
+  }
+
+  setName(name) {
+    this.name = name
   }
 }

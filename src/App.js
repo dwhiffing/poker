@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import './index.css'
 import './card.css'
 import { Room } from './components/Room'
-import { Card } from './components/Card'
-import { Box, Typography, Button } from '@material-ui/core'
+import { Box, Typography, Button, TextField } from '@material-ui/core'
 
 function App() {
   const intervalRef = useRef()
   const [availableRooms, setAvailableRooms] = useState([])
   const [room, setRoom] = useState()
+  const [name, setName] = useState(localStorage.getItem('name') || '')
   const [state, setState] = useState({
     players: [],
     cards: [],
@@ -22,6 +22,8 @@ function App() {
   const createRoom = async () => {
     const room = await window.colyseus.create('poker')
     localStorage.setItem(room.id, room.sessionId)
+    localStorage.setItem('name', name)
+    room.send({ action: 'setName', name })
     setRoom(room)
   }
 
@@ -29,7 +31,6 @@ function App() {
     let sessionId = localStorage.getItem(roomId)
 
     let room
-    console.log(roomId, sessionId)
     if (sessionId) {
       try {
         console.log('trying reconnect')
@@ -45,6 +46,9 @@ function App() {
       console.log('joined', room.sessionId)
       localStorage.setItem(room.id, room.sessionId)
     }
+
+    localStorage.setItem('name', name)
+    room.send({ action: 'setName', data: { name } })
 
     setRoom(room)
   }
@@ -99,6 +103,12 @@ function App() {
         justifyContent="center"
         alignItems="center"
       >
+        <TextField
+          placeholder="Enter name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          style={{ marginBottom: 20 }}
+        />
         <Typography variant="h5">Available Tables:</Typography>
 
         <Box

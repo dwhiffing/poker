@@ -12,6 +12,7 @@ export const Seat = ({ onSit, position, player = {} }) => {
     isTurn,
     isClient,
     status,
+    name,
     cards,
     dealer,
   } = player
@@ -23,6 +24,7 @@ export const Seat = ({ onSit, position, player = {} }) => {
   if (id && !connected) {
     backgroundColor = 'rgba(255,0,0,0.5)'
   }
+
   return (
     <Box flex={1} display="flex" justifyContent="center" alignItems="center">
       <Box
@@ -47,7 +49,7 @@ export const Seat = ({ onSit, position, player = {} }) => {
             justifyContent="center"
             alignItems="center"
           >
-            <p>{id}</p>
+            <p>{name || id}</p>
 
             {/* <p>${money}</p> */}
 
@@ -81,6 +83,7 @@ function Cards({ cards, position }) {
     >
       {cards.map((card, i) => (
         <div
+          key={`card-${i}`}
           style={{
             width: i === 0 ? 15 : null,
           }}

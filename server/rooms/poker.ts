@@ -31,8 +31,10 @@ export class Poker extends Room<Table> {
 
   onMessage(client: Client, data: any) {
     const player = this.getPlayer(client.sessionId)
+    if (!player) return
     const isTheirTurn = client.sessionId === this.state.currentTurn
-    const canDeal = this.getActivePlayers().length === 0 && player.dealer
+    const canDeal =
+      this.getActivePlayers().length === 0 && player && player.dealer
 
     if (data.action === 'check' && isTheirTurn) {
       player.check()
@@ -48,6 +50,8 @@ export class Poker extends Room<Table> {
     } else if (data.action === 'stand') {
       player.stand()
       this.getDealer()
+    } else if (data.action === 'setName') {
+      player.setName(data.name)
     }
   }
 
