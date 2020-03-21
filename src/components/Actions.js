@@ -12,28 +12,45 @@ export function Actions({ room, currentTurn, players }) {
   const sendAction = action => room.send({ action })
 
   return (
-    <Flex
-      flex={0}
-      variant="justify-center"
-      position="fixed"
-      bottom={10}
-      left={0}
-      right={0}
-    >
-      <Action disabled={!canMove} onClick={() => sendAction('check')}>
-        Check
-      </Action>
-      <Action disabled={!canMove} onClick={() => sendAction('fold')}>
-        Fold
-      </Action>
-      <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
-        Deal
-      </Action>
-      <Action disabled={!canStand} onClick={() => sendAction('stand')}>
-        Stand
-      </Action>
-      <Action onClick={() => room.leave()}>Leave</Action>
-    </Flex>
+    <>
+      <Flex
+        flex={0}
+        variant="justify-center"
+        position="fixed"
+        bottom={10}
+        left={0}
+        right={0}
+      >
+        {canDeal ? (
+          <>
+            <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
+              Deal
+            </Action>
+          </>
+        ) : (
+          <>
+            <Action disabled={!canMove} onClick={() => sendAction('check')}>
+              Check
+            </Action>
+            <Action disabled={true}>Call</Action>
+            <Action disabled={true}>Raise</Action>
+          </>
+        )}
+      </Flex>
+
+      <Flex
+        flex={0}
+        variant="justify-center"
+        position="fixed"
+        top={10}
+        left={0}
+        right={0}
+      >
+        <Button onClick={() => (canStand ? sendAction('stand') : room.leave())}>
+          {canStand ? 'Stop playing' : 'Leave room'}
+        </Button>
+      </Flex>
+    </>
   )
 }
 
