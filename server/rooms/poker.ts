@@ -3,14 +3,12 @@ import { Player, Table } from '../schema'
 import { SUITS, VALUES, shuffleCards } from '../utils'
 import { Hand } from 'pokersolver'
 
-// TODO: need to handle turn logic when player disconnects (should wait for player to reconnect if its their turn)
-// TODO: need to allow players to leave manually and join specific rooms
-// TODO: determine winner of hand
 // TOOD: Allow betting
-// TODO: show cards for a bit after round end, select winner
 
-const MOVE_TIME = 30
+const MOVE_TIME = 1
 const RECONNECT_TIME = 30
+const END_OF_HAND_TIME = 5
+const FAST_MODE = false
 
 export class Poker extends Room<Table> {
   maxClients = 10
@@ -48,16 +46,11 @@ export class Poker extends Room<Table> {
     } else if (data.action === 'deal' && canDeal) {
       this.doNextPhase()
     } else if (data.action === 'sit') {
-      if (typeof data.seatIndex === 'number') {
-        player.sit(data.seatIndex)
-      } else {
-        const takenSeats = this.getSeatedPlayers().map(p => p.seatIndex)
-        const availableSeats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(
-          n => !takenSeats.includes(n),
-        )
-        const seat = availableSeats[0] // sample(availableSeats)
-        player.sit(seat)
-      }
+      player.sit(
+        typeof data.seatIndex === 'number'
+          ? data.seatIndex
+          : this.getAvailableSeat(),
+      )
       this.getDealer()
     } else if (data.action === 'stand') {
       player.stand()
@@ -212,7 +205,7 @@ export class Poker extends Room<Table> {
         this.moveTimeout.clear()
       }
       this.setDealer()
-    }, 5000)
+    }, END_OF_HAND_TIME * 1000)
   }
 
   setAutoMoveTimeout() {
@@ -221,20 +214,23 @@ export class Poker extends Room<Table> {
       this.moveTimeout.clear()
     }
 
-    // this.onMessage({ sessionId: this.state.currentTurn } as Client, {
-    //   action: 'check',
-    // })
+    if (FAST_MODE) {
+      this.onMessage({ sessionId: this.state.currentTurn } as Client, {
+        action: 'check',
+      })
+    }
+    {
+      player.remainingMoveTime = MOVE_TIME
+      this.moveTimeout = this.clock.setInterval(() => {
+        player.remainingMoveTime -= 1
 
-    player.remainingMoveTime = MOVE_TIME
-    this.moveTimeout = this.clock.setInterval(() => {
-      player.remainingMoveTime -= 1
-
-      if (player.remainingMoveTime <= 0) {
-        this.onMessage({ sessionId: this.state.currentTurn } as Client, {
-          action: 'check',
-        })
-      }
-    }, 1000)
+        if (player.remainingMoveTime <= 0) {
+          this.onMessage({ sessionId: this.state.currentTurn } as Client, {
+            action: 'check',
+          })
+        }
+      }, 1000)
+    }
   }
 
   getPlayers = () =>
@@ -243,6 +239,14 @@ export class Poker extends Room<Table> {
   getPlayer = sessionId => this.getPlayers().find(p => p.id === sessionId)
 
   getActivePlayers = () => this.getSeatedPlayers().filter(p => p.inPlay)
+
+  getAvailableSeat = () => {
+    const takenSeats = this.getSeatedPlayers().map(p => p.seatIndex)
+    const availableSeats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(
+      n => !takenSeats.includes(n),
+    )
+    return availableSeats[0] // sample(availableSeats)
+  }
 
   getSeatedPlayers = () => {
     const sortedPlayers = this.getPlayers().filter(p => p.seatIndex > -1)

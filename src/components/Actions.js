@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button } from '@material-ui/core'
 import { Flex } from './'
 
@@ -41,7 +41,13 @@ const Action = ({ variant = 'contained', ...props }) => (
   <Button variant={variant} {...props} style={{ margin: 8 }} />
 )
 
-function BottomActions({ canDeal, sendAction, canMove }) {
+function BottomActions({ canDeal, sendAction, canMove, autoDeal = true }) {
+  useEffect(() => {
+    if (canDeal && autoDeal) {
+      sendAction('deal')
+    }
+  }, [canDeal, sendAction, autoDeal])
+
   return (
     <Flex
       flex={0}
