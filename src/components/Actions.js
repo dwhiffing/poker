@@ -13,41 +13,24 @@ export function Actions({ room, currentTurn, players }) {
 
   return (
     <>
-      <Flex
-        flex={0}
-        variant="justify-center"
-        position="fixed"
-        bottom={10}
-        left={0}
-        right={0}
-      >
-        {canDeal ? (
-          <>
-            <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
-              Deal
-            </Action>
-          </>
-        ) : (
-          <>
-            <Action disabled={!canMove} onClick={() => sendAction('check')}>
-              Check
-            </Action>
-            <Action disabled={true}>Call</Action>
-            <Action disabled={true}>Raise</Action>
-          </>
-        )}
-      </Flex>
+      {(canMove || canDeal) && (
+        <BottomActions
+          canDeal={canDeal}
+          sendAction={sendAction}
+          canMove={canMove}
+        />
+      )}
 
       <Flex
         flex={0}
-        variant="justify-center"
+        justifyContent="flex-end"
         position="fixed"
         top={10}
         left={0}
         right={0}
       >
         <Button onClick={() => (canStand ? sendAction('stand') : room.leave())}>
-          {canStand ? 'Stop playing' : 'Leave room'}
+          {canStand ? 'Stand' : 'Leave'}
         </Button>
       </Flex>
     </>
@@ -57,3 +40,33 @@ export function Actions({ room, currentTurn, players }) {
 const Action = ({ variant = 'contained', ...props }) => (
   <Button variant={variant} {...props} style={{ margin: 8 }} />
 )
+
+function BottomActions({ canDeal, sendAction, canMove }) {
+  return (
+    <Flex
+      flex={0}
+      variant="justify-center"
+      position="fixed"
+      bottom={10}
+      left={0}
+      right={0}
+      zIndex={49}
+    >
+      {canDeal ? (
+        <>
+          <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
+            Deal
+          </Action>
+        </>
+      ) : (
+        <>
+          <Action disabled={!canMove} onClick={() => sendAction('check')}>
+            Check
+          </Action>
+          <Action disabled={true}>Call</Action>
+          <Action disabled={true}>Raise</Action>
+        </>
+      )}
+    </Flex>
+  )
+}

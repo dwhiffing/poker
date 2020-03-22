@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Seat } from './Seat'
 import { Card } from './Card'
 import { Flex } from '.'
+import { getIsSmall } from '../utils'
 
 const getIsPortrait = () =>
   document.documentElement.clientWidth < document.documentElement.clientHeight
@@ -27,7 +28,7 @@ export function Room({ players, room, cards }) {
 
   return (
     <Table
-      layout={portrait ? PORTRAIT : LANDSCAPE}
+      layout={getIsSmall() ? SMALL : portrait ? PORTRAIT : LANDSCAPE}
       cards={cards}
       onSit={onSit}
       room={room}
@@ -47,7 +48,7 @@ const Table = ({ layout, room, cards, onSit, players }) => {
       variant="column justify-between"
       width="100%"
       maxWidth={1100}
-      maxHeight={500}
+      maxHeight={600}
     >
       <Flex>
         <Flex />
@@ -58,23 +59,27 @@ const Table = ({ layout, room, cards, onSit, players }) => {
       </Flex>
 
       <Flex flex={2}>
-        <Flex variant="column">
-          {layout[1].map(n => (
-            <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
-          ))}
-        </Flex>
+        {layout[1].length > 0 && (
+          <Flex variant="column">
+            {layout[1].map(n => (
+              <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+            ))}
+          </Flex>
+        )}
 
-        <Flex variant="center" flex={2}>
+        <Flex minHeight={100} variant="center" flexWrap="wrap" flex={2} py={2}>
           {cards.map((card, i) => (
-            <Card key={card.index} card={card} style={{ margin: 5 }} />
+            <Card key={card.index} card={card} scale={0.9} />
           ))}
         </Flex>
 
-        <Flex variant="column">
-          {layout[2].map(n => (
-            <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
-          ))}
-        </Flex>
+        {layout[2].length > 0 && (
+          <Flex variant="column">
+            {layout[2].map(n => (
+              <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+            ))}
+          </Flex>
+        )}
       </Flex>
 
       <Flex>
@@ -84,6 +89,7 @@ const Table = ({ layout, room, cards, onSit, players }) => {
         ))}
         <Flex />
       </Flex>
+      {getIsSmall() && <Flex />}
     </Flex>
   )
 }
@@ -101,3 +107,4 @@ const LANDSCAPE = [
   [3, 4],
   [7, 6, 5],
 ]
+const SMALL = [[0, 1, 2, 3], [], [], [7, 6, 5, 4]]

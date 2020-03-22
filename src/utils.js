@@ -22,3 +22,7 @@ export const saveRoom = (room, name) => {
   localStorage.setItem('name', name)
   localStorage.setItem(room.id, room.sessionId)
 }
+
+export const getIsSmall = () =>
+  document.documentElement.clientWidth <= 320 ||
+  document.documentElement.clientHeight <= 320

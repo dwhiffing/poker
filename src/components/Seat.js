@@ -2,8 +2,9 @@ import React from 'react'
 import { Card } from './Card'
 import { Button, Box, Typography } from '@material-ui/core'
 import { Flex } from '.'
+import { getIsSmall } from '../utils'
 
-export const Seat = ({ onSit, player = {} }) => {
+export const Seat = ({ onSit, player = {}, style = {} }) => {
   const {
     id,
     remainingConnectionTime,
@@ -28,14 +29,15 @@ export const Seat = ({ onSit, player = {} }) => {
     <Flex variant="center">
       <Flex
         flex={0}
-        minWidth={80}
-        minHeight={80}
+        minWidth={getIsSmall() ? 70 : 110}
+        minHeight={getIsSmall() ? 70 : 110}
         borderRadius="50%"
         variant="center"
         position="relative"
         style={{
-          border: `${isClient ? 2 : 0}px solid white`,
+          border: `2px solid ${isClient ? 'white' : '#45a173'}`,
           backgroundColor,
+          ...style,
         }}
       >
         {id ? (
@@ -62,6 +64,8 @@ export const Seat = ({ onSit, player = {} }) => {
 }
 
 function Cards({ isClient, cards }) {
+  const clientYOffset = getIsSmall() ? 0 : 50
+  const yOffset = getIsSmall() ? 0 : 30
   return (
     <Box position="absolute" display="flex" justifyContent="center">
       {cards.map((card, i) => (
@@ -69,7 +73,8 @@ function Cards({ isClient, cards }) {
           <Card
             key={i}
             card={card}
-            scale={isClient ? 0.7 : 0.4}
+            scale={isClient ? 0.8 : 0.4}
+            y={isClient ? clientYOffset : yOffset}
             style={{ position: 'relative', zIndex: isClient ? 10 : 1 }}
           />
         </Box>

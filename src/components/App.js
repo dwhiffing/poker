@@ -44,7 +44,12 @@ function App() {
   return (
     <Flex
       variant="column center"
-      style={{ height: 'calc(100vh - 120px)', marginTop: 60 }}
+      overflow="hidden"
+      style={{
+        width: 'calc(100vw - 20px)',
+        height: 'calc(100vh - 20px)',
+        padding: '10px',
+      }}
     >
       <Room room={room} cards={cards} players={players} />
       <Actions room={room} currentTurn={currentTurn} players={players} />
