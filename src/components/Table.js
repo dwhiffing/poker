@@ -3,6 +3,7 @@ import { Seat } from './Seat'
 import { Card } from './Card'
 import { Flex, Chips } from '.'
 import { getIsSmall, getHandLabel } from '../utils'
+import { Box } from '@material-ui/core'
 
 const Table = ({ pot, layout, room, cards, onSit, players }) => {
   const getPlayer = i =>
@@ -48,11 +49,17 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
           </Flex>
         )}
 
-        <Flex minHeight={100} variant="center" flexWrap="wrap" flex={2} py={2}>
-          {cards.map((card, i) => (
-            <Card key={card.index} card={card} scale={0.9} />
-          ))}
-          {pot > 0 && <Chips amount={pot} />}
+        <Flex variant="column center" flex={2} py={2}>
+          <Flex flex={0} minHeight={100} variant="center" flexWrap="wrap">
+            {cards.map((card, i) => (
+              <Card key={card.index} card={card} scale={0.9} />
+            ))}
+          </Flex>
+          {pot > 0 && (
+            <Box zIndex={99}>
+              <Chips amount={pot} />
+            </Box>
+          )}
         </Flex>
 
         {layout[2].length > 0 && (
