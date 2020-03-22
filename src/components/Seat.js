@@ -55,9 +55,9 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
         position="relative"
         style={{
           boxShadow: winner
-            ? '0 0 10px 1px #00fff3, inset 0 0 80px 80px transparent'
+            ? '0 0 15px 5px #00fff3, inset 0 0 80px 80px transparent'
             : '',
-          border: `2px solid ${winner ? '#00fff3' : COLORS[index]}`,
+          border: `3px solid ${COLORS[index]}`,
           backgroundColor,
           ...style,
         }}
