@@ -5,16 +5,16 @@ import { Flex } from '.'
 import { getIsSmall } from '../utils'
 
 const COLORS = [
-  '#056CF2',
-  '#DBE3E6',
-  '#F5EB67',
-  '#F84322',
-  '#011526',
-  '#732DD9',
-  '#FFA15C',
-  '#546E7A',
-  '#F263CC',
-  '#BB580C',
+  '#0071AA',
+  '#ECE4B7',
+  '#E8C340',
+  '#D33830',
+  '#A06033',
+  '#EA9438',
+  '#E27C81',
+  '#7FC12E',
+  '#525252',
+  '#AA5BAF',
 ]
 
 export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
@@ -53,16 +53,21 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
         position="relative"
         style={{
           boxShadow: winner
-            ? '0 0 20px 10px #00fff3, inset 0 0 80px 80px transparent'
+            ? '0 0 10px 1px #00fff3, inset 0 0 80px 80px transparent'
             : '',
-          border: `3px solid ${winner ? '#00fff3' : COLORS[index]}`,
+          border: `2px solid ${winner ? '#00fff3' : COLORS[index]}`,
           backgroundColor,
           ...style,
         }}
       >
         {id ? (
           <>
-            <Typography style={{ fontWeight: isClient ? 'bold' : 'normal' }}>
+            <Typography
+              style={{
+                fontSize: isClient ? 16 : 12,
+                fontWeight: isClient ? 'bold' : 'normal',
+              }}
+            >
               {name || id}
             </Typography>
 
