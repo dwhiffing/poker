@@ -4,7 +4,21 @@ import { Button, Box, Typography, Chip } from '@material-ui/core'
 import { Flex } from '.'
 import { getIsSmall } from '../utils'
 
-export const Seat = ({ onSit, player = {}, style = {} }) => {
+const COLORS = [
+  '#056CF2',
+  '#DBE3E6',
+  '#F5EB67',
+  '#F84322',
+  '#011526',
+  '#732DD9',
+  '#FFA15C',
+  '#546E7A',
+  '#F263CC',
+  '#BB580C',
+]
+
+export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
+  const player = getPlayer(index) || {}
   const {
     id,
     remainingConnectionTime,
@@ -16,6 +30,7 @@ export const Seat = ({ onSit, player = {}, style = {} }) => {
     winner,
     hand,
     showCards,
+    seatIndex,
     cards,
     dealer,
   } = player
@@ -32,22 +47,25 @@ export const Seat = ({ onSit, player = {}, style = {} }) => {
     <Flex variant="center">
       <Flex
         flex={0}
+        variant="center"
         minWidth={getIsSmall() ? 70 : 90}
         minHeight={getIsSmall() ? 70 : 90}
         borderRadius="50%"
-        variant="center"
         position="relative"
         style={{
-          border: `${winner ? 4 : 2}px solid ${
-            winner ? '#00fff3' : isClient ? 'white' : '#45a173'
-          }`,
+          boxShadow: winner
+            ? '0 0 20px 10px #00fff3, inset 0 0 80px 80px transparent'
+            : '',
+          border: `3px solid ${winner ? '#00fff3' : COLORS[seatIndex]}`,
           backgroundColor,
           ...style,
         }}
       >
         {id ? (
           <>
-            <Typography>{name || id}</Typography>
+            <Typography style={{ fontWeight: isClient ? 'bold' : 'normal' }}>
+              {name || id}
+            </Typography>
 
             {dealer && <DealerChip />}
             {isTurn && (
