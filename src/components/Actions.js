@@ -29,7 +29,16 @@ export function Actions({ room, currentTurn, players }) {
         left={0}
         right={0}
       >
-        <Button onClick={() => (canStand ? sendAction('stand') : room.leave())}>
+        <Button
+          onClick={() => {
+            if (canStand) {
+              sendAction('stand')
+            } else {
+              localStorage.removeItem(room.id)
+              room.leave()
+            }
+          }}
+        >
           {canStand ? 'Stand' : 'Leave'}
         </Button>
       </Flex>
