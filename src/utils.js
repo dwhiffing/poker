@@ -1,3 +1,5 @@
+import { Hand } from 'pokersolver'
+
 export const maskCards = (player, id) => ({
   ...player,
   // TODO: hide cards from server
@@ -30,3 +32,36 @@ export const saveRoom = (room, name) => {
 export const getIsSmall = () =>
   document.documentElement.clientWidth <= 320 ||
   document.documentElement.clientHeight <= 320
+
+export const SUITS = ['s', 'c', 'h', 'd']
+export const VALUES = [
+  0,
+  'A',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '10',
+  'J',
+  'Q',
+  'K',
+]
+
+export const getHandLabel = (player, cards) => {
+  if (cards.length === 0) {
+    return ''
+  }
+  const cardsString = cards.map(c => `${VALUES[c.value]}${SUITS[c.suit]}`)
+  const hand = player.cards
+    .map(c => `${VALUES[c.value]}${SUITS[c.suit]}`)
+    .concat(cardsString)
+  const value = Hand.solve(hand)
+  return value.descr
+}
+
+export const getIsPortrait = () =>
+  document.documentElement.clientWidth < document.documentElement.clientHeight

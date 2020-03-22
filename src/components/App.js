@@ -11,6 +11,7 @@ function App() {
   const [cards, setCards] = useState([])
   const [players, setPlayers] = useState([])
   const [currentTurn, setCurrentTurn] = useState()
+  const [pot, setPot] = useState()
 
   useEffect(() => {
     if (!room) return
@@ -28,6 +29,8 @@ function App() {
           setCards(value.toJSON())
         } else if (field === 'currentTurn') {
           setCurrentTurn(value)
+        } else if (field === 'pot') {
+          setPot(value)
         } else if (field === 'players') {
           setPlayers(value.toJSON().map(p => maskCards(p, room.sessionId)))
         }
@@ -38,7 +41,7 @@ function App() {
     return <Lobby setRoom={setRoom} />
   }
 
-  console.log({ cards, players, currentTurn })
+  console.log({ pot, cards, players, currentTurn })
 
   return (
     <Flex
@@ -50,7 +53,7 @@ function App() {
         padding: '10px',
       }}
     >
-      <Room room={room} cards={cards} players={players} />
+      <Room pot={pot} room={room} cards={cards} players={players} />
       <Actions room={room} currentTurn={currentTurn} players={players} />
     </Flex>
   )
