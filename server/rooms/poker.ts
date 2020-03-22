@@ -148,9 +148,7 @@ export class Poker extends Room<Table> {
     }
 
     if (!player) {
-      if (this.getActivePlayers().length === 0) {
-        this.state.currentTurn = ''
-      }
+      this.state.currentTurn = ''
     }
 
     if (player) {
