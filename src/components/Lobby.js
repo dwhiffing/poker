@@ -29,6 +29,10 @@ export function Lobby({ setRoom }) {
   const joinRoom = useCallback(
     async (roomId, name) => {
       const room = await joinRoomWithReconnect(roomId)
+      if (!room) {
+        alert('Failed to join room')
+        return
+      }
       saveRoom(room, name)
       room.send({ action: 'setName', name })
       room.send({ action: 'sit' })
