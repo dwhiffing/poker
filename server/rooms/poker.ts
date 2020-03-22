@@ -11,7 +11,7 @@ const END_OF_HAND_TIME = 5
 const FAST_MODE = false
 
 export class Poker extends Room<Table> {
-  maxClients = 10
+  maxClients = 15
   leaveInterval: Delayed
   moveTimeout: Delayed
   deck = []
@@ -25,10 +25,6 @@ export class Poker extends Room<Table> {
     if (this.getPlayer(client.sessionId)) return
 
     this.state.players.push(new Player(client.sessionId))
-
-    if (this.getPlayers().length === 10) {
-      this.lock()
-    }
   }
 
   onMessage(client: Client, data: any) {
@@ -47,11 +43,13 @@ export class Poker extends Room<Table> {
     } else if (data.action === 'deal' && canDeal) {
       this.doNextPhase()
     } else if (data.action === 'sit') {
-      player.sit(
-        typeof data.seatIndex === 'number'
-          ? data.seatIndex
-          : this.getAvailableSeat(),
-      )
+      if (typeof data.seatIndex === 'number') {
+        player.sit(data.seatIndex)
+      }
+      const availableSeat = this.getAvailableSeat()
+      if (typeof availableSeat === 'number') {
+        player.sit(availableSeat)
+      }
       this.getDealer()
     } else if (data.action === 'stand') {
       player.stand()
@@ -66,6 +64,11 @@ export class Poker extends Room<Table> {
 
   onLeave = async (client, consented) => {
     const player = this.getPlayer(client.sessionId)
+    if (!player) {
+      return
+    }
+
+    this.unlock()
     player.connected = false
 
     if (consented) {
