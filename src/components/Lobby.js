@@ -1,37 +1,57 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Box, Typography, Button, TextField } from '@material-ui/core'
 import { saveRoom, joinRoomWithReconnect } from '../utils'
 import { Flex } from '.'
+
+const AUTOCONNECT = false
 
 export function Lobby({ setRoom }) {
   const [availableRooms, setAvailableRooms] = useState([])
   const [name, setName] = useState(localStorage.getItem('name') || '')
   const intervalRef = useRef()
 
-  const createRoom = async name => {
-    const room = await window.colyseus.create('poker')
-    saveRoom(room, name)
-    room.send({ action: 'setName', name })
-    setRoom(room)
-  }
+  const createRoom = useCallback(
+    async name => {
+      const room = await window.colyseus.create('poker')
+      saveRoom(room, name)
+      room.send({ action: 'setName', name })
+      setRoom(room)
+    },
+    [setRoom],
+  )
 
-  const joinRoom = async (roomId, name) => {
-    const room = await joinRoomWithReconnect(roomId)
-    saveRoom(room, name)
-    room.send({ action: 'setName', name })
-    setRoom(room)
-  }
+  const joinRoom = useCallback(
+    async (roomId, name) => {
+      const room = await joinRoomWithReconnect(roomId)
+      saveRoom(room, name)
+      room.send({ action: 'setName', name })
+      setRoom(room)
+    },
+    [setRoom],
+  )
 
-  const getAvailableRooms = async () => {
+  const getAvailableRooms = useCallback(async () => {
     const rooms = await window.colyseus.getAvailableRooms()
     setAvailableRooms(rooms)
-  }
+  }, [])
 
   useEffect(() => {
     getAvailableRooms()
     intervalRef.current = setInterval(getAvailableRooms, 3000)
     return () => clearInterval(intervalRef.current)
-  }, [])
+  }, [getAvailableRooms])
+
+  useEffect(() => {
+    if (availableRooms) {
+      const lastRoom = availableRooms.find(room =>
+        localStorage.getItem(room.roomId),
+      )
+
+      if (AUTOCONNECT && lastRoom) {
+        joinRoom(lastRoom.roomId, name)
+      }
+    }
+  }, [availableRooms, joinRoom, name])
 
   return (
     <Flex variant="column center" style={{ height: '100vh' }}>

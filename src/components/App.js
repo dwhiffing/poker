@@ -16,6 +16,7 @@ function App() {
     if (!room) return
 
     room.onLeave(() => {
+      localStorage.removeItem(room.id)
       setRoom(null)
       setPlayers([])
       setCurrentTurn()
