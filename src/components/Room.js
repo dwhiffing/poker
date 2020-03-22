@@ -9,6 +9,10 @@ const getIsPortrait = () =>
 export function Room({ players, room, cards }) {
   const [portrait, setPortrait] = useState(getIsPortrait())
   const currentPlayer = players.find(p => p.id === room.sessionId) || {}
+  const seatedPlayers = players
+    .filter(p => p.seatIndex !== -1)
+    .map(p => ({ ...p, isClient: p.id === room.sessionId }))
+    .sort((a, b) => a.seatIndex - b.seatIndex)
 
   const onSit = seatIndex =>
     currentPlayer.seatIndex === -1
@@ -21,95 +25,79 @@ export function Room({ players, room, cards }) {
     return () => window.removeEventListener('resize', callback)
   }, [])
 
-  return portrait ? (
-    <PortraitTable cards={cards} onSit={onSit} players={players} />
-  ) : (
-    <LandscapeTable cards={cards} onSit={onSit} players={players} />
+  return (
+    <Table
+      layout={portrait ? PORTRAIT : LANDSCAPE}
+      cards={cards}
+      onSit={onSit}
+      room={room}
+      players={seatedPlayers}
+    />
   )
 }
 
-const LandscapeTable = ({ cards, onSit, players }) => (
-  <Flex
-    variant="column justify-between"
-    width="100%"
-    maxWidth={1100}
-    maxHeight={500}
-  >
-    <Flex>
-      <Flex />
-      <Seat player={players[0]} onSit={onSit(0)} />
-      <Seat player={players[1]} onSit={onSit(1)} />
-      <Seat player={players[2]} onSit={onSit(2)} />
-      <Flex />
-    </Flex>
+const Table = ({ layout, room, cards, onSit, players }) => {
+  const getPlayer = i =>
+    players
+      .map(p => ({ ...p, isClient: p.id === room.sessionId }))
+      .find(p => p.seatIndex === i)
 
-    <Flex flex={2}>
-      <Flex variant="column">
-        <Seat player={players[9]} onSit={onSit(9)} />
-        <Seat player={players[8]} onSit={onSit(8)} />
-      </Flex>
-
-      <Flex variant="center" flex={2}>
-        {cards.map((card, i) => (
-          <Card key={card.index} card={card} style={{ margin: 5 }} />
+  return (
+    <Flex
+      variant="column justify-between"
+      width="100%"
+      maxWidth={1100}
+      maxHeight={500}
+    >
+      <Flex>
+        <Flex />
+        {layout[0].map(n => (
+          <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
         ))}
+        <Flex />
       </Flex>
 
-      <Flex variant="column">
-        <Seat player={players[3]} onSit={onSit(3)} />
-        <Seat player={players[4]} onSit={onSit(4)} />
-      </Flex>
-    </Flex>
+      <Flex flex={2}>
+        <Flex variant="column">
+          {layout[1].map(n => (
+            <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+          ))}
+        </Flex>
 
-    <Flex>
-      <Flex />
-      <Seat player={players[7]} onSit={onSit(7)} />
-      <Seat player={players[6]} onSit={onSit(6)} />
-      <Seat player={players[5]} onSit={onSit(5)} />
-      <Flex />
-    </Flex>
-  </Flex>
-)
+        <Flex variant="center" flex={2}>
+          {cards.map((card, i) => (
+            <Card key={card.index} card={card} style={{ margin: 5 }} />
+          ))}
+        </Flex>
 
-const PortraitTable = ({ cards, onSit, players }) => (
-  <Flex
-    variant="column justify-between"
-    width="100%"
-    maxWidth={1100}
-    maxHeight={500}
-  >
-    <Flex>
-      <Flex />
-      <Seat player={players[0]} onSit={onSit(0)} />
-      <Seat player={players[1]} onSit={onSit(1)} />
-      <Flex />
-    </Flex>
-
-    <Flex flex={2}>
-      <Flex variant="column">
-        <Seat player={players[9]} onSit={onSit(9)} />
-        <Seat player={players[8]} onSit={onSit(8)} />
-        <Seat player={players[7]} onSit={onSit(7)} />
+        <Flex variant="column">
+          {layout[2].map(n => (
+            <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+          ))}
+        </Flex>
       </Flex>
 
-      <Flex variant="center" flex={2}>
-        {cards.map((card, i) => (
-          <Card key={card.index} card={card} style={{ margin: 5 }} />
+      <Flex>
+        <Flex />
+        {layout[3].map(n => (
+          <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
         ))}
-      </Flex>
-
-      <Flex variant="column">
-        <Seat player={players[2]} onSit={onSit(2)} />
-        <Seat player={players[3]} onSit={onSit(3)} />
-        <Seat player={players[4]} onSit={onSit(4)} />
+        <Flex />
       </Flex>
     </Flex>
+  )
+}
 
-    <Flex>
-      <Flex />
-      <Seat player={players[6]} onSit={onSit(6)} />
-      <Seat player={players[5]} onSit={onSit(5)} />
-      <Flex />
-    </Flex>
-  </Flex>
-)
+const PORTRAIT = [
+  [0, 1],
+  [9, 8, 7],
+  [2, 3, 4],
+  [6, 5],
+]
+
+const LANDSCAPE = [
+  [0, 1, 2],
+  [9, 8],
+  [3, 4],
+  [7, 6, 5],
+]

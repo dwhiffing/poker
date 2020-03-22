@@ -45,13 +45,7 @@ function App() {
       variant="column center"
       style={{ height: 'calc(100vh - 120px)', marginTop: 60 }}
     >
-      <Room
-        room={room}
-        cards={cards}
-        players={players
-          .map(p => ({ ...p, isClient: p.id === room.sessionId }))
-          .sort((a, b) => a.seatIndex - b.seatIndex)}
-      />
+      <Room room={room} cards={cards} players={players} />
       <Actions room={room} currentTurn={currentTurn} players={players} />
     </Flex>
   )
