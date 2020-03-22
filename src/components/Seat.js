@@ -1,6 +1,6 @@
 import React from 'react'
 import { Card } from './Card'
-import { Button, Box, Typography } from '@material-ui/core'
+import { Button, Box, Typography, Chip } from '@material-ui/core'
 import { Flex } from '.'
 import { getIsSmall } from '../utils'
 
@@ -13,6 +13,9 @@ export const Seat = ({ onSit, player = {}, style = {} }) => {
     isTurn,
     isClient,
     name,
+    winner,
+    hand,
+    showCards,
     cards,
     dealer,
   } = player
@@ -29,13 +32,15 @@ export const Seat = ({ onSit, player = {}, style = {} }) => {
     <Flex variant="center">
       <Flex
         flex={0}
-        minWidth={getIsSmall() ? 70 : 110}
-        minHeight={getIsSmall() ? 70 : 110}
+        minWidth={getIsSmall() ? 70 : 90}
+        minHeight={getIsSmall() ? 70 : 90}
         borderRadius="50%"
         variant="center"
         position="relative"
         style={{
-          border: `2px solid ${isClient ? 'white' : '#45a173'}`,
+          border: `${winner ? 4 : 2}px solid ${
+            winner ? '#00fff3' : isClient ? 'white' : '#45a173'
+          }`,
           backgroundColor,
           ...style,
         }}
@@ -51,7 +56,17 @@ export const Seat = ({ onSit, player = {}, style = {} }) => {
               />
             )}
 
-            <Cards isClient={isClient} cards={cards} />
+            <Cards big={isClient || showCards} cards={cards} />
+
+            {(isClient || showCards) && hand && (
+              <Box
+                position="absolute"
+                bottom={getIsSmall() ? -20 : -40}
+                zIndex={66}
+              >
+                <Chip label={hand} />
+              </Box>
+            )}
           </>
         ) : (
           <Button disabled={!onSit} onClick={onSit}>
@@ -63,7 +78,7 @@ export const Seat = ({ onSit, player = {}, style = {} }) => {
   )
 }
 
-function Cards({ isClient, cards }) {
+function Cards({ big, cards }) {
   const clientYOffset = getIsSmall() ? 0 : 50
   const yOffset = getIsSmall() ? 0 : 30
   return (
@@ -73,9 +88,9 @@ function Cards({ isClient, cards }) {
           <Card
             key={i}
             card={card}
-            scale={isClient ? 0.8 : 0.4}
-            y={isClient ? clientYOffset : yOffset}
-            style={{ position: 'relative', zIndex: isClient ? 10 : 1 }}
+            scale={big ? 0.8 : 0.4}
+            y={big ? clientYOffset : yOffset}
+            style={{ position: 'relative', zIndex: big ? 10 : 1 }}
           />
         </Box>
       ))}

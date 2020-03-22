@@ -3,9 +3,39 @@ import { Seat } from './Seat'
 import { Card } from './Card'
 import { Flex } from '.'
 import { getIsSmall } from '../utils'
-
+import { Hand } from 'pokersolver'
 const getIsPortrait = () =>
   document.documentElement.clientWidth < document.documentElement.clientHeight
+
+const SUITS = ['s', 'c', 'h', 'd']
+const VALUES = [
+  0,
+  'A',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '10',
+  'J',
+  'Q',
+  'K',
+]
+
+const getHandLabel = (player, cards) => {
+  if (cards.length === 0) {
+    return ''
+  }
+  const cardsString = cards.map(c => `${VALUES[c.value]}${SUITS[c.suit]}`)
+  const hand = player.cards
+    .map(c => `${VALUES[c.value]}${SUITS[c.suit]}`)
+    .concat(cardsString)
+  const value = Hand.solve(hand)
+  return value.descr
+}
 
 export function Room({ players, room, cards }) {
   const [portrait, setPortrait] = useState(getIsPortrait())
@@ -32,6 +62,7 @@ export function Room({ players, room, cards }) {
       cards={cards}
       onSit={onSit}
       room={room}
+      currentPlayer={currentPlayer}
       players={seatedPlayers}
     />
   )
@@ -40,7 +71,11 @@ export function Room({ players, room, cards }) {
 const Table = ({ layout, room, cards, onSit, players }) => {
   const getPlayer = i =>
     players
-      .map(p => ({ ...p, isClient: p.id === room.sessionId }))
+      .map(p => ({
+        ...p,
+        hand: getHandLabel(p, cards),
+        isClient: p.id === room.sessionId,
+      }))
       .find(p => p.seatIndex === i)
 
   return (

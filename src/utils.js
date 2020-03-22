@@ -1,6 +1,10 @@
 export const maskCards = (player, id) => ({
   ...player,
-  cards: player.id === id ? player.cards : player.cards.map(c => ({})),
+  // TODO: hide cards from server
+  cards:
+    player.id === id || player.showCards
+      ? player.cards
+      : player.cards.map(c => ({})),
 })
 
 export const joinRoomWithReconnect = async roomId => {

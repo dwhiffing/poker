@@ -29,6 +29,12 @@ export class Player extends Schema {
   @type('boolean')
   dealerPending: boolean
 
+  @type('boolean')
+  winner: boolean
+
+  @type('boolean')
+  showCards: boolean
+
   // is it currently their turn
   @type('boolean')
   isTurn: boolean
@@ -65,12 +71,16 @@ export class Player extends Schema {
     this.inPlay = false
     this.dealer = false
     this.turnPending = false
+    this.showCards = false
+    this.winner = false
     this.dealerPending = true
   }
 
   fold() {
     this.cards = this.cards.filter(() => false)
     this.inPlay = false
+    this.showCards = false
+    this.winner = false
     this.turnPending = false
   }
 

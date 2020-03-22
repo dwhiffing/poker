@@ -1,6 +1,7 @@
 import { Room, Delayed, Client } from 'colyseus'
 import { Player, Table } from '../schema'
-import { shuffleCards } from '../utils'
+import { SUITS, VALUES, shuffleCards } from '../utils'
+import { Hand } from 'pokersolver'
 
 // TODO: need to handle turn logic when player disconnects (should wait for player to reconnect if its their turn)
 // TODO: need to allow players to leave manually and join specific rooms
@@ -172,15 +173,46 @@ export class Poker extends Room<Table> {
     return this.getPlayer(this.state.currentTurn)
   }
 
-  endGame() {
-    this.state.cards = this.state.cards.filter(f => false)
-    this.setCurrentTurn()
-    this.getSeatedPlayers().forEach(player => player.fold())
-    if (this.moveTimeout) {
-      this.moveTimeout.clear()
-    }
+  getWinners() {
+    const cards = this.state.cards.map(
+      c => `${VALUES[c.value]}${SUITS[c.suit]}`,
+    )
 
-    this.setDealer()
+    this.getActivePlayers().forEach(p => (p.showCards = true))
+
+    const playersWithHands = this.getActivePlayers().map(p => ({
+      id: p.id,
+      hand: [...p.cards.values()]
+        .map(c => `${VALUES[c.value]}${SUITS[c.suit]}`)
+        .concat(cards),
+    }))
+
+    const playerHands = playersWithHands.map(p => Hand.solve(p.hand))
+    const winners = Hand.winners(playerHands)
+    return winners.map(winningHand => {
+      const playerHandIndex = playerHands.indexOf(winningHand)
+      return this.getPlayer(playersWithHands[playerHandIndex].id)
+    })
+  }
+
+  endGame() {
+    this.getActivePlayers().forEach(p => (p.showCards = true))
+    this.setCurrentTurn()
+
+    const winners = this.getWinners()
+    winners.forEach(player => {
+      player.winner = true
+    })
+
+    this.clock.setTimeout(() => {
+      this.state.cards = this.state.cards.filter(f => false)
+
+      this.getSeatedPlayers().forEach(player => player.fold())
+      if (this.moveTimeout) {
+        this.moveTimeout.clear()
+      }
+      this.setDealer()
+    }, 5000)
   }
 
   setAutoMoveTimeout() {
@@ -188,6 +220,10 @@ export class Poker extends Room<Table> {
     if (this.moveTimeout) {
       this.moveTimeout.clear()
     }
+
+    // this.onMessage({ sessionId: this.state.currentTurn } as Client, {
+    //   action: 'check',
+    // })
 
     player.remainingMoveTime = MOVE_TIME
     this.moveTimeout = this.clock.setInterval(() => {
