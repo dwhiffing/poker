@@ -12,6 +12,7 @@ export function Lobby({ setRoom }) {
     localStorage.getItem('name') || faker.name.firstName(),
   )
   const intervalRef = useRef()
+  const autoConnectAttempted = useRef(false)
 
   const createRoom = useCallback(
     async name => {
@@ -53,7 +54,8 @@ export function Lobby({ setRoom }) {
         localStorage.getItem(room.roomId),
       )
 
-      if (AUTOCONNECT && lastRoom) {
+      if (AUTOCONNECT && lastRoom && !autoConnectAttempted.current) {
+        autoConnectAttempted.current = true
         joinRoom(lastRoom.roomId, name)
       }
     }
