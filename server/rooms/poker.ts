@@ -13,6 +13,7 @@ const RECONNECT_TIME = 30
 
 export class Poker extends Room<Table> {
   maxClients = 10
+  leaveInterval: Delayed
   moveTimeout: Delayed
   deck = []
 
@@ -46,7 +47,16 @@ export class Poker extends Room<Table> {
     } else if (data.action === 'deal' && canDeal) {
       this.doNextPhase()
     } else if (data.action === 'sit') {
-      player.sit(data.seatIndex)
+      if (typeof data.seatIndex === 'number') {
+        player.sit(data.seatIndex)
+      } else {
+        const takenSeats = this.getSeatedPlayers().map(p => p.seatIndex)
+        const availableSeats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(
+          n => !takenSeats.includes(n),
+        )
+        const seat = availableSeats[0] // sample(availableSeats)
+        player.sit(seat)
+      }
       this.getDealer()
     } else if (data.action === 'stand') {
       player.stand()
@@ -71,20 +81,20 @@ export class Poker extends Room<Table> {
     const reconnection = this.allowReconnection(client)
 
     player.remainingConnectionTime = RECONNECT_TIME
-    const interval = setInterval(() => {
-      if (!player) return clearInterval(interval)
+    this.leaveInterval = this.clock.setInterval(() => {
+      if (!player) return this.leaveInterval && this.leaveInterval.clear()
 
       player.remainingConnectionTime -= 1
       if (player.remainingConnectionTime === 0) {
         this.removePlayer(player)
         reconnection.reject()
-        clearInterval(interval)
+        this.leaveInterval && this.leaveInterval.clear()
       }
     }, 1000)
 
     await reconnection
     player.connected = true
-    clearInterval(interval)
+    this.leaveInterval && this.leaveInterval.clear()
   }
 
   removePlayer(player) {

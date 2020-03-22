@@ -3,7 +3,7 @@ import { Box, Typography, Button, TextField } from '@material-ui/core'
 import { saveRoom, joinRoomWithReconnect } from '../utils'
 import { Flex } from '.'
 
-const AUTOCONNECT = false
+const AUTOCONNECT = true
 
 export function Lobby({ setRoom }) {
   const [availableRooms, setAvailableRooms] = useState([])
@@ -15,6 +15,7 @@ export function Lobby({ setRoom }) {
       const room = await window.colyseus.create('poker')
       saveRoom(room, name)
       room.send({ action: 'setName', name })
+      room.send({ action: 'sit' })
       setRoom(room)
     },
     [setRoom],
@@ -25,6 +26,7 @@ export function Lobby({ setRoom }) {
       const room = await joinRoomWithReconnect(roomId)
       saveRoom(room, name)
       room.send({ action: 'setName', name })
+      room.send({ action: 'sit' })
       setRoom(room)
     },
     [setRoom],
