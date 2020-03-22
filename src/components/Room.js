@@ -45,9 +45,9 @@ export function Room({ players, room, cards }) {
     .map(p => ({ ...p, isClient: p.id === room.sessionId }))
     .sort((a, b) => a.seatIndex - b.seatIndex)
 
-  const onSit = seatIndex =>
+  const onSit =
     currentPlayer.seatIndex === -1
-      ? () => room.send({ action: 'sit', seatIndex })
+      ? seatIndex => room.send({ action: 'sit', seatIndex })
       : null
 
   useEffect(() => {
@@ -88,7 +88,12 @@ const Table = ({ layout, room, cards, onSit, players }) => {
       <Flex>
         <Flex />
         {layout[0].map(n => (
-          <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+          <Seat
+            key={`seat-${n}`}
+            index={n}
+            getPlayer={getPlayer}
+            onSit={onSit}
+          />
         ))}
         <Flex />
       </Flex>
@@ -97,7 +102,12 @@ const Table = ({ layout, room, cards, onSit, players }) => {
         {layout[1].length > 0 && (
           <Flex variant="column">
             {layout[1].map(n => (
-              <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+              <Seat
+                key={`seat-${n}`}
+                index={n}
+                getPlayer={getPlayer}
+                onSit={onSit}
+              />
             ))}
           </Flex>
         )}
@@ -111,7 +121,12 @@ const Table = ({ layout, room, cards, onSit, players }) => {
         {layout[2].length > 0 && (
           <Flex variant="column">
             {layout[2].map(n => (
-              <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+              <Seat
+                key={`seat-${n}`}
+                index={n}
+                getPlayer={getPlayer}
+                onSit={onSit}
+              />
             ))}
           </Flex>
         )}
@@ -120,7 +135,12 @@ const Table = ({ layout, room, cards, onSit, players }) => {
       <Flex>
         <Flex />
         {layout[3].map(n => (
-          <Seat key={`seat-${n}`} player={getPlayer(n)} onSit={onSit(n)} />
+          <Seat
+            key={`seat-${n}`}
+            index={n}
+            getPlayer={getPlayer}
+            onSit={onSit}
+          />
         ))}
         <Flex />
       </Flex>

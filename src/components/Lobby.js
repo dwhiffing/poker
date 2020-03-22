@@ -15,7 +15,8 @@ export function Lobby({ setRoom }) {
 
   const createRoom = useCallback(
     async name => {
-      const room = await window.colyseus.create('poker')
+      const roomName = prompt('Room name?')
+      const room = await window.colyseus.create('poker', { roomName })
       saveRoom(room, name)
       room.send({ action: 'setName', name })
       room.send({ action: 'sit' })
@@ -94,7 +95,7 @@ const RoomListItem = ({ room, onClick }) => (
       style={{ cursor: 'pointer', textDecoration: 'underline' }}
       onClick={onClick}
     >
-      Table: {room.roomId}
+      {room.metadata.roomName || room.roomId}
     </Typography>
   </Box>
 )

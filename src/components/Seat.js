@@ -30,7 +30,6 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
     winner,
     hand,
     showCards,
-    seatIndex,
     cards,
     dealer,
   } = player
@@ -56,7 +55,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
           boxShadow: winner
             ? '0 0 20px 10px #00fff3, inset 0 0 80px 80px transparent'
             : '',
-          border: `3px solid ${winner ? '#00fff3' : COLORS[seatIndex]}`,
+          border: `3px solid ${winner ? '#00fff3' : COLORS[index]}`,
           backgroundColor,
           ...style,
         }}
@@ -87,7 +86,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
             )}
           </>
         ) : (
-          <Button disabled={!onSit} onClick={onSit}>
+          <Button disabled={!onSit} onClick={() => onSit(index)}>
             Sit
           </Button>
         )}

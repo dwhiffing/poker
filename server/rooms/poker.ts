@@ -5,7 +5,7 @@ import { Hand } from 'pokersolver'
 
 // TOOD: Allow betting
 
-const MOVE_TIME = 1
+const MOVE_TIME = 30
 const RECONNECT_TIME = 30
 const END_OF_HAND_TIME = 5
 const FAST_MODE = false
@@ -16,8 +16,9 @@ export class Poker extends Room<Table> {
   moveTimeout: Delayed
   deck = []
 
-  onCreate() {
+  onCreate(options) {
     this.setState(new Table())
+    this.setMetadata({ roomName: options.roomName })
   }
 
   onJoin(client: Client) {
