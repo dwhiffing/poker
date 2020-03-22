@@ -39,6 +39,10 @@ export class Player extends Schema {
   @type('boolean')
   isTurn: boolean
 
+  // how much money are they betting
+  @type('number')
+  bet: number
+
   // how much money do they have
   @type('number')
   money: number
@@ -62,7 +66,8 @@ export class Player extends Schema {
   constructor(id: string) {
     super()
     this.id = id
-    this.money = 0
+    this.money = 1000
+    this.bet = 0
     this.remainingConnectionTime = 0
     this.remainingMoveTime = 0
     this.seatIndex = -1

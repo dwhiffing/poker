@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card } from './Card'
 import { Button, Box, Typography, Chip } from '@material-ui/core'
-import { Flex } from '.'
+import { Flex, Chips } from '.'
 import { getIsSmall } from '../utils'
 
 const COLORS = [
@@ -28,6 +28,8 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
     isClient,
     name,
     winner,
+    bet = 0,
+    money,
     hand,
     showCards,
     cards,
@@ -70,6 +72,18 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
             >
               {name || id}
             </Typography>
+
+            {money > 0 && (
+              <Box position="absolute" top={-10} zIndex={2}>
+                <Chips amount={money} />
+              </Box>
+            )}
+
+            {bet > 0 && (
+              <Box position="absolute" bottom={-20} zIndex={2}>
+                <Chips amount={bet} />
+              </Box>
+            )}
 
             {dealer && <DealerChip />}
             {isTurn && (
