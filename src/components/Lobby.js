@@ -2,12 +2,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Box, Typography, Button, TextField } from '@material-ui/core'
 import { saveRoom, joinRoomWithReconnect } from '../utils'
 import { Flex } from '.'
+import faker from 'faker'
 
 const AUTOCONNECT = true
 
 export function Lobby({ setRoom }) {
   const [availableRooms, setAvailableRooms] = useState([])
-  const [name, setName] = useState(localStorage.getItem('name') || '')
+  const [name, setName] = useState(
+    localStorage.getItem('name') || faker.name.firstName(),
+  )
   const intervalRef = useRef()
 
   const createRoom = useCallback(
