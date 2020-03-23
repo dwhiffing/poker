@@ -39,7 +39,7 @@ export function Chips({ amount }) {
   return (
     <Chip
       label={numeral(amount)
-        .format('(0[.]0a)')
+        .format('(0[.]00a)')
         .toUpperCase()}
     />
   )

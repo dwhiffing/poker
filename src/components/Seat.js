@@ -28,6 +28,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
     isClient,
     name,
     winner,
+    inPlay,
     bet = 0,
     money,
     hand,
@@ -80,7 +81,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
             )}
 
             {bet > 0 && (
-              <Box position="absolute" bottom={-30} zIndex={99}>
+              <Box position="absolute" bottom={-10} zIndex={99}>
                 <Chips amount={bet} />
               </Box>
             )}
@@ -94,7 +95,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
 
             <Cards big={isClient || showCards} cards={cards} />
 
-            {bet <= 0 && (isClient || showCards) && hand && (
+            {inPlay && bet <= 0 && (isClient || showCards) && hand && (
               <Box
                 position="absolute"
                 bottom={getIsSmall() ? -20 : -40}

@@ -3,10 +3,7 @@ import { Player, Table } from '../schema'
 import { SUITS, VALUES, shuffleCards } from '../utils'
 import { Hand } from 'pokersolver'
 
-// TOOD: Allow betting
-
 const MOVE_TIME = 30
-const RECONNECT_TIME = 30
 const END_OF_HAND_TIME = 5
 const FAST_MODE = false
 
@@ -31,14 +28,24 @@ export class Poker extends Room<Table> {
     const player = this.getPlayer(client.sessionId)
     if (!player) return
     const isTheirTurn = client.sessionId === this.state.currentTurn
-    const canDeal =
-      this.getActivePlayers().length === 0 && player && player.dealer
+    const eligiblePlayers = this.getSeatedPlayers().filter(
+      p => p.cards.length === 0 && p.money > 0,
+    )
+    const canDeal = eligiblePlayers.length >= 2 && player && player.dealer
 
     if (data.action === 'check' && isTheirTurn) {
       player.check()
       this.doNextTurn()
     } else if (data.action === 'fold' && isTheirTurn) {
+      this.state.pot += player.bet
       player.fold()
+      this.doNextTurn()
+    } else if (data.action === 'call' && isTheirTurn) {
+      player.wager(this.state.currentBet)
+      this.doNextTurn()
+    } else if (data.action === 'bet' && isTheirTurn) {
+      player.wager(data.amount)
+      this.state.currentBet = player.bet
       this.doNextTurn()
     } else if (data.action === 'deal' && canDeal) {
       this.doNextPhase()
@@ -52,6 +59,7 @@ export class Poker extends Room<Table> {
       }
       this.getDealer()
     } else if (data.action === 'stand') {
+      this.state.pot += player.bet
       player.stand()
       if (this.getActivePlayers().length === 1) {
         this.endGame()
@@ -69,34 +77,20 @@ export class Poker extends Room<Table> {
     }
 
     this.unlock()
-    player.connected = false
 
     if (consented) {
       this.removePlayer(player)
       return
     }
 
-    const reconnection = this.allowReconnection(client)
-
-    player.remainingConnectionTime = RECONNECT_TIME
-    this.leaveInterval = this.clock.setInterval(() => {
-      if (!player) return this.leaveInterval && this.leaveInterval.clear()
-
-      player.remainingConnectionTime -= 1
-      if (player.remainingConnectionTime === 0) {
-        this.removePlayer(player)
-        reconnection.reject()
-        this.leaveInterval && this.leaveInterval.clear()
-      }
-    }, 1000)
-
-    await reconnection
-    player.connected = true
-    this.leaveInterval && this.leaveInterval.clear()
+    player.startReconnect(this.clock, this.allowReconnection(client), () => {
+      this.removePlayer(player)
+    })
   }
 
   removePlayer(player) {
     const currentPlayer = this.getCurrentPlayer()
+    this.state.pot += player.bet
     player.fold()
     this.state.players = this.state.players.filter(p => p.id !== player.id)
 
@@ -107,16 +101,44 @@ export class Poker extends Room<Table> {
     }
   }
 
+  putBetsInPot() {
+    this.state.currentBet = 0
+
+    this.getActivePlayers().forEach(player => {
+      this.state.pot += player.bet
+      player.bet = 0
+    })
+  }
+
   doNextPhase() {
+    const playersYetToCall = this.getActivePlayers().filter(
+      p => p.bet < this.state.currentBet,
+    )
+    if (playersYetToCall.length > 0) {
+      playersYetToCall.forEach(player => player.resetTurn())
+      this.setCurrentTurn(playersYetToCall[0])
+      return
+    }
+
+    this.putBetsInPot()
+
     if (this.state.cards.length === 5) {
       this.endGame()
     } else if (this.getActivePlayers().length === 0) {
       this.deck = shuffleCards()
       this.state.cards = this.state.cards.filter(f => false)
       this.getSeatedPlayers()
-        .filter(p => p.connected)
-        .forEach(player => {
+        .filter(p => p.connected && p.money > 0)
+        .forEach((player, index, players) => {
           player.giveCards(this.deck.splice(-2, 2))
+          if (index === players.length - 1 || index === players.length - 2) {
+            player.wager(
+              index === players.length - 1
+                ? this.state.blind * 2
+                : this.state.blind,
+            )
+            this.state.currentBet = player.bet
+          }
         })
     } else if (this.state.cards.length === 0) {
       this.state.cards.push(...this.deck.splice(-3, 3)) // flop
@@ -127,7 +149,7 @@ export class Poker extends Room<Table> {
     }
 
     this.getSeatedPlayers().forEach(player => player.resetTurn())
-    this.setCurrentTurn(this.getDealer())
+    this.setCurrentTurn(this.getActivePlayers()[0])
   }
 
   doNextTurn() {
@@ -192,14 +214,18 @@ export class Poker extends Room<Table> {
     })
   }
 
+  payoutWinners() {
+    const winners = this.getWinners()
+    const splitPot = Math.floor(this.state.pot / winners.length)
+    winners.forEach(player => player.winPot(splitPot))
+    this.state.pot = 0
+  }
+
   endGame() {
     this.getActivePlayers().forEach(p => (p.showCards = true))
     this.setCurrentTurn()
-
-    const winners = this.getWinners()
-    winners.forEach(player => {
-      player.winner = true
-    })
+    this.putBetsInPot()
+    this.payoutWinners()
 
     this.clock.setTimeout(() => {
       this.state.cards = this.state.cards.filter(f => false)
@@ -230,7 +256,7 @@ export class Poker extends Room<Table> {
 
         if (player.remainingMoveTime <= 0) {
           this.onMessage({ sessionId: this.state.currentTurn } as Client, {
-            action: 'check',
+            action: this.state.currentBet > 0 ? 'fold' : 'check',
           })
         }
       }, 1000)
@@ -252,14 +278,20 @@ export class Poker extends Room<Table> {
     return availableSeats[0] // sample(availableSeats)
   }
 
-  getSeatedPlayers = () => {
+  getSeatedPlayers = ({ getDealerIndex = false } = {}) => {
     const sortedPlayers = this.getPlayers().filter(p => p.seatIndex > -1)
-
     const dealerIndex = sortedPlayers.findIndex(p => p.dealer)
+    let index = dealerIndex
+    if (!getDealerIndex) {
+      index = dealerIndex + 3
+      if (index > sortedPlayers.length) {
+        index -= sortedPlayers.length
+      }
+    }
 
     return [
-      ...sortedPlayers.slice(dealerIndex, sortedPlayers.length),
-      ...sortedPlayers.slice(0, dealerIndex),
+      ...sortedPlayers.slice(index, sortedPlayers.length),
+      ...sortedPlayers.slice(0, index),
     ]
   }
 
@@ -272,7 +304,7 @@ export class Poker extends Room<Table> {
   }
 
   setDealer() {
-    let player = this.getSeatedPlayers()
+    let player = this.getSeatedPlayers({ getDealerIndex: true })
       .filter(p => p.connected)
       .find(p => p.dealerPending)
 

@@ -2,20 +2,23 @@ import React, { useEffect } from 'react'
 import { Button } from '@material-ui/core'
 import { Flex } from './'
 
-export function Actions({ room, currentTurn, players }) {
+export function Actions({ room, blind, currentTurn, currentBet, players }) {
   const player = players.find(p => p.id === room.sessionId) || {}
   const canMove = currentTurn === room.sessionId
   const activePlayers = players.filter(p => p.inPlay)
   const numPlayers = players.filter(p => p.seatIndex > -1).length
   const canDeal = player.dealer && numPlayers >= 2 && activePlayers.length === 0
   const canStand = player.seatIndex !== -1
-  const sendAction = action => room.send({ action })
+  const sendAction = (action, rest = {}) => room.send({ action, ...rest })
 
   return (
     <>
       {(canMove || canDeal) && (
         <BottomActions
           canDeal={canDeal}
+          currentBet={currentBet}
+          betAmount={blind * 2}
+          player={player}
           sendAction={sendAction}
           canMove={canMove}
         />
@@ -50,12 +53,29 @@ const Action = ({ variant = 'contained', ...props }) => (
   <Button variant={variant} {...props} style={{ margin: 8 }} />
 )
 
-function BottomActions({ canDeal, sendAction, canMove, autoDeal = true }) {
+function BottomActions({
+  canDeal,
+  sendAction,
+  currentBet = 0,
+  player,
+  canMove,
+  betAmount,
+  autoDeal = false,
+  autoCheck = false,
+}) {
   useEffect(() => {
     if (canDeal && autoDeal) {
       sendAction('deal')
     }
   }, [canDeal, sendAction, autoDeal])
+
+  useEffect(() => {
+    if (player.money === 0 && currentBet === 0 && autoCheck) {
+      setTimeout(() => {
+        sendAction('check')
+      }, 500)
+    }
+  }, [player, autoCheck, sendAction, currentBet])
 
   return (
     <Flex
@@ -75,11 +95,34 @@ function BottomActions({ canDeal, sendAction, canMove, autoDeal = true }) {
         </>
       ) : (
         <>
-          <Action disabled={!canMove} onClick={() => sendAction('check')}>
-            Check
+          <Action
+            disabled={!canMove}
+            onClick={() =>
+              sendAction(currentBet > player.bet ? 'fold' : 'check')
+            }
+          >
+            {currentBet > player.bet ? 'Fold' : 'Check'}
           </Action>
-          <Action disabled={true}>Call</Action>
-          <Action disabled={true}>Raise</Action>
+          <Action
+            disabled={
+              !canMove ||
+              player.money + player.bet < currentBet ||
+              currentBet === player.bet
+            }
+            onClick={() => sendAction('call')}
+          >
+            Call
+          </Action>
+          <Action
+            disabled={
+              !canMove || player.money + player.bet < currentBet + betAmount
+            }
+            onClick={() =>
+              sendAction('bet', { amount: currentBet + betAmount })
+            }
+          >
+            {currentBet > 0 ? 'Raise' : 'Bet'}
+          </Action>
         </>
       )}
     </Flex>

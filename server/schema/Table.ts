@@ -5,6 +5,10 @@ export class Table extends Schema {
   @type('string')
   currentTurn: string
   @type('number')
+  currentBet: number
+  @type('number')
+  blind: number
+  @type('number')
   pot: number
   @type([Player])
   players = new ArraySchema<Player>()
@@ -14,5 +18,7 @@ export class Table extends Schema {
   constructor() {
     super()
     this.pot = 0
+    this.currentBet = 0
+    this.blind = 10
   }
 }

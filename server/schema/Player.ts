@@ -1,7 +1,10 @@
 import { type, Schema, ArraySchema } from '@colyseus/schema'
 import { Card } from './Card'
+import { Delayed } from 'colyseus'
 
+const RECONNECT_TIME = 30
 export class Player extends Schema {
+  leaveInterval: Delayed
   // session id of client
   @type('string')
   id: string
@@ -86,11 +89,27 @@ export class Player extends Schema {
     this.inPlay = false
     this.showCards = false
     this.winner = false
+    this.bet = 0
     this.turnPending = false
   }
 
   check() {
     this.turnPending = false
+  }
+
+  winPot(amount) {
+    this.bet = 0
+    this.winner = true
+    this.money += amount
+  }
+
+  wager(amount) {
+    if (amount - this.bet > this.money) {
+      return
+    }
+    this.turnPending = false
+    this.money -= amount - this.bet
+    this.bet = amount
   }
 
   resetTurn() {
@@ -125,5 +144,23 @@ export class Player extends Schema {
 
   setName(name) {
     this.name = name
+  }
+
+  startReconnect = async (clock, reconnection, callback = () => {}) => {
+    this.remainingConnectionTime = RECONNECT_TIME
+    this.connected = false
+
+    this.leaveInterval = clock.setInterval(() => {
+      this.remainingConnectionTime -= 1
+      if (this.remainingConnectionTime === 0) {
+        this.leaveInterval && this.leaveInterval.clear()
+        reconnection.reject()
+        callback()
+      }
+    }, 1000)
+
+    await reconnection
+    this.leaveInterval && this.leaveInterval.clear()
+    this.connected = true
   }
 }
