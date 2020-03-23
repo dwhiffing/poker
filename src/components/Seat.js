@@ -41,6 +41,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
       <Flex
         flex={0}
         mx={1}
+        my={2}
         variant="center"
         borderRadius={12}
         minWidth={document.documentElement.clientWidth < 400 ? 64 : 83}

@@ -23,8 +23,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
       maxHeight={500}
     >
       <Flex>
-        {document.documentElement.clientHeight > 400 &&
-          document.documentElement.clientWidth > 500 && <Flex />}
+        {document.documentElement.clientHeight > 350 &&
+          document.documentElement.clientWidth > 400 && <Flex />}
         {layout[0].map(n => (
           <Seat
             key={`seat-${n}`}
@@ -33,8 +33,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
             onSit={onSit}
           />
         ))}
-        {document.documentElement.clientHeight > 400 &&
-          document.documentElement.clientWidth > 500 && <Flex />}
+        {document.documentElement.clientHeight > 350 &&
+          document.documentElement.clientWidth > 400 && <Flex />}
       </Flex>
 
       <Flex flex={2}>
@@ -78,7 +78,7 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
               />
             ))}
           </Box>
-          {document.documentElement.clientHeight > 400 &&
+          {document.documentElement.clientHeight > 350 &&
             document.documentElement.clientWidth > 400 &&
             pot > 0 && (
               <Box zIndex={99}>
@@ -102,8 +102,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
       </Flex>
 
       <Flex>
-        {document.documentElement.clientHeight > 400 &&
-          document.documentElement.clientWidth > 500 && <Flex />}
+        {document.documentElement.clientHeight > 350 &&
+          document.documentElement.clientWidth > 400 && <Flex />}
         {layout[3].map(n => (
           <Seat
             key={`seat-${n}`}
@@ -112,8 +112,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
             onSit={onSit}
           />
         ))}
-        {document.documentElement.clientHeight > 400 &&
-          document.documentElement.clientWidth > 500 && <Flex />}
+        {document.documentElement.clientHeight > 350 &&
+          document.documentElement.clientWidth > 400 && <Flex />}
       </Flex>
     </Flex>
   )
