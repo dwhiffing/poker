@@ -55,12 +55,12 @@ function App() {
       overflow="hidden"
       style={{
         width:
-          document.documentElement.clientWidth > 400
+          document.documentElement.clientWidth > 500
             ? 'calc(100vw - 20px)'
             : '100vw',
         height: 'calc(100vh - 60px)',
         padding:
-          document.documentElement.clientWidth > 400 ? '30px 10px' : '30px 0',
+          document.documentElement.clientWidth > 500 ? '30px 10px' : '30px 0',
       }}
     >
       <Room pot={pot} room={room} cards={cards} players={players} />
