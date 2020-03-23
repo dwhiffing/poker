@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Table from './Table'
-import { getIsSmall, getIsPortrait } from '../utils'
+import { getIsPortrait } from '../utils'
 
 export function Room({ pot = 0, players, room, cards }) {
   const [portrait, setPortrait] = useState(getIsPortrait())
@@ -23,7 +23,15 @@ export function Room({ pot = 0, players, room, cards }) {
 
   return (
     <Table
-      layout={getIsSmall() ? SMALL : portrait ? PORTRAIT : LANDSCAPE}
+      layout={
+        document.documentElement.clientHeight <= 320
+          ? currentPlayer.seatIndex >= 4
+            ? SMALL_2
+            : SMALL
+          : portrait
+          ? PORTRAIT
+          : LANDSCAPE
+      }
       cards={cards}
       onSit={onSit}
       room={room}
@@ -48,3 +56,4 @@ const LANDSCAPE = [
   [7, 6, 5],
 ]
 const SMALL = [[0, 1, 2, 3, 4], [], [], [9, 8, 7, 6, 5]]
+const SMALL_2 = [[9, 8, 7, 6, 5], [], [], [0, 1, 2, 3, 4]]

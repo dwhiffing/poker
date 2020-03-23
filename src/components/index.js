@@ -35,9 +35,10 @@ export const Flex = ({
   )
 }
 
-export function Chips({ amount }) {
+export function Chips({ amount, ...props }) {
   return (
     <Chip
+      {...props}
       label={numeral(amount)
         .format('(0[.]00a)')
         .toUpperCase()}

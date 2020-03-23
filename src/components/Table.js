@@ -20,10 +20,11 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
       variant="column justify-between"
       width="100%"
       maxWidth={1100}
-      maxHeight={600}
+      maxHeight={500}
     >
       <Flex>
-        <Flex />
+        {document.documentElement.clientHeight > 400 &&
+          document.documentElement.clientWidth > 500 && <Flex />}
         {layout[0].map(n => (
           <Seat
             key={`seat-${n}`}
@@ -32,7 +33,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
             onSit={onSit}
           />
         ))}
-        <Flex />
+        {document.documentElement.clientHeight > 400 &&
+          document.documentElement.clientWidth > 500 && <Flex />}
       </Flex>
 
       <Flex flex={2}>
@@ -49,17 +51,40 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
           </Flex>
         )}
 
-        <Flex variant="column center" flex={2} py={2}>
-          <Flex flex={0} minHeight={100} variant="center" flexWrap="wrap">
+        <Flex
+          variant="column center"
+          minHeight={document.documentElement.clientWidth < 500 ? 350 : 0}
+          flex={2}
+        >
+          <Box
+            minHeight={100}
+            minWidth={150}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            flexWrap="wrap"
+          >
+            {document.documentElement.clientHeight <= 400 && pot > 0 && (
+              <Box zIndex={99}>
+                <Chips amount={pot} />
+              </Box>
+            )}
             {cards.map((card, i) => (
-              <Card key={card.index} card={card} scale={0.9} />
+              <Card
+                key={card.index}
+                card={card}
+                scale={1}
+                style={{ margin: 5 }}
+              />
             ))}
-          </Flex>
-          {pot > 0 && (
-            <Box zIndex={99}>
-              <Chips amount={pot} />
-            </Box>
-          )}
+          </Box>
+          {document.documentElement.clientHeight > 400 &&
+            document.documentElement.clientWidth > 400 &&
+            pot > 0 && (
+              <Box zIndex={99}>
+                <Chips amount={pot} />
+              </Box>
+            )}
         </Flex>
 
         {layout[2].length > 0 && (
@@ -77,7 +102,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
       </Flex>
 
       <Flex>
-        <Flex />
+        {document.documentElement.clientHeight > 400 &&
+          document.documentElement.clientWidth > 500 && <Flex />}
         {layout[3].map(n => (
           <Seat
             key={`seat-${n}`}
@@ -86,9 +112,9 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
             onSit={onSit}
           />
         ))}
-        <Flex />
+        {document.documentElement.clientHeight > 400 &&
+          document.documentElement.clientWidth > 500 && <Flex />}
       </Flex>
-      {getIsSmall() && <Flex />}
     </Flex>
   )
 }

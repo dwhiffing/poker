@@ -54,9 +54,13 @@ function App() {
       variant="column center"
       overflow="hidden"
       style={{
-        width: 'calc(100vw - 20px)',
-        height: 'calc(100vh - 20px)',
-        padding: '10px',
+        width:
+          document.documentElement.clientWidth > 400
+            ? 'calc(100vw - 20px)'
+            : '100vw',
+        height: 'calc(100vh - 60px)',
+        padding:
+          document.documentElement.clientWidth > 400 ? '30px 10px' : '30px 0',
       }}
     >
       <Room pot={pot} room={room} cards={cards} players={players} />

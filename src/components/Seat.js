@@ -3,19 +3,7 @@ import { Card } from './Card'
 import { Button, Box, Typography, Chip } from '@material-ui/core'
 import { Flex, Chips } from '.'
 import { getIsSmall } from '../utils'
-
-const COLORS = [
-  '#0071AA',
-  '#ECE4B7',
-  '#E8C340',
-  '#D33830',
-  '#A06033',
-  '#EA9438',
-  '#E27C81',
-  '#7FC12E',
-  '#525252',
-  '#AA5BAF',
-]
+import numeral from 'numeral'
 
 export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
   const player = getPlayer(index) || {}
@@ -37,51 +25,56 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
     dealer,
   } = player
 
-  let backgroundColor = 'rgba(255,255,255,0.1)'
+  let backgroundColor = '#54b786'
   if (isTurn) {
-    backgroundColor = 'rgba(255,255,255,0.4)'
+    backgroundColor = '#8dd2b0'
   }
   if (id && !connected) {
-    backgroundColor = 'rgba(255,0,0,0.5)'
+    backgroundColor = '#d86e6e'
+  }
+  if (winner) {
+    backgroundColor = '#00fff3'
   }
 
   return (
-    <Flex variant="center">
+    <Flex position="relative" variant="center">
       <Flex
         flex={0}
+        mx={1}
         variant="center"
-        minWidth={getIsSmall() ? 70 : 90}
-        minHeight={getIsSmall() ? 70 : 90}
-        borderRadius="50%"
+        borderRadius={12}
+        minWidth={document.documentElement.clientWidth < 400 ? 64 : 83}
         position="relative"
+        py={1}
         style={{
-          boxShadow: winner
-            ? '0 0 15px 5px #00fff3, inset 0 0 80px 80px transparent'
-            : '',
           border: `3px solid ${COLORS[index]}`,
           backgroundColor,
+          zIndex: 10,
           ...style,
         }}
       >
         {id ? (
           <>
-            <Typography
-              style={{
-                fontSize: isClient ? 16 : 12,
-                fontWeight: isClient ? 'bold' : 'normal',
-              }}
-            >
-              {name || id}
-            </Typography>
-
-            {money > 0 && (
-              <Box position="absolute" top={-10} zIndex={2}>
-                <Chips amount={money} />
-              </Box>
-            )}
+            <Flex variant="column center">
+              <Typography
+                style={{
+                  fontSize: isClient ? 14 : 12,
+                  textAlign: 'center',
+                  fontWeight: isClient ? 'bold' : 'normal',
+                }}
+              >
+                {name || id}
+              </Typography>
+              <Typography style={{ fontSize: 12 }}>
+                $
+                {numeral(money)
+                  .format('(0[.]00a)')
+                  .toUpperCase()}
+              </Typography>
+            </Flex>
 
             {bet > 0 && (
-              <Box position="absolute" bottom={-10} zIndex={99}>
+              <Box position="absolute" bottom={-25} zIndex={99}>
                 <Chips amount={bet} />
               </Box>
             )}
@@ -93,14 +86,8 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
               />
             )}
 
-            <Cards big={isClient || showCards} cards={cards} />
-
-            {inPlay && bet <= 0 && (isClient || showCards) && hand && (
-              <Box
-                position="absolute"
-                bottom={getIsSmall() ? -20 : -40}
-                zIndex={66}
-              >
+            {inPlay && bet <= 0 && showCards && hand && (
+              <Box position="absolute" bottom={-23} zIndex={66}>
                 <Chip label={hand} />
               </Box>
             )}
@@ -111,22 +98,23 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
           </Button>
         )}
       </Flex>
+      {cards && <Cards big={isClient || showCards} cards={cards} />}
     </Flex>
   )
 }
 
 function Cards({ big, cards }) {
-  const clientYOffset = getIsSmall() ? 0 : 50
-  const yOffset = getIsSmall() ? 0 : 30
+  const yOffset = getIsSmall() ? -15 : -20
+  const scale = big ? 1 : 0.7
   return (
-    <Box position="absolute" display="flex" justifyContent="center">
+    <Box position="absolute" display="flex" justifyContent="center" zIndex={1}>
       {cards.map((card, i) => (
         <Box key={`card-${i}`} width={i === 0 ? 15 : null}>
           <Card
             key={i}
             card={card}
-            scale={big ? 0.8 : 0.4}
-            y={big ? clientYOffset : yOffset}
+            scale={getIsSmall() ? scale * 0.9 : scale}
+            y={yOffset}
             style={{ position: 'relative', zIndex: big ? 10 : 1 }}
           />
         </Box>
@@ -145,10 +133,9 @@ function TimeChip({ time }) {
       height={30}
       borderRadius={15}
       position="absolute"
-      right={-5}
-      bottom={-5}
+      right={-20}
       style={{
-        zIndex: 20,
+        zIndex: 300,
         boxShadow: 'rgba(0,0,0,0.5) 0px 0px 3px',
         backgroundColor: 'white',
         color: 'green',
@@ -169,10 +156,9 @@ function DealerChip() {
       height={30}
       borderRadius={15}
       position="absolute"
-      right={-5}
-      top={-5}
+      right={-20}
       style={{
-        zIndex: 20,
+        zIndex: 300,
         boxShadow: 'rgba(0,0,0,0.5) 0px 0px 3px',
         backgroundColor: 'white',
         color: 'green',
@@ -182,3 +168,16 @@ function DealerChip() {
     </Box>
   )
 }
+
+const COLORS = [
+  '#0071AA',
+  '#ECE4B7',
+  '#E8C340',
+  '#D33830',
+  '#A06033',
+  '#EA9438',
+  '#E27C81',
+  '#7FC12E',
+  '#525252',
+  '#AA5BAF',
+]

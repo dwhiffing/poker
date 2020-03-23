@@ -30,8 +30,8 @@ export const saveRoom = (room, name) => {
 }
 
 export const getIsSmall = () =>
-  document.documentElement.clientWidth <= 320 ||
-  document.documentElement.clientHeight <= 320
+  document.documentElement.clientWidth <= 500 ||
+  document.documentElement.clientHeight <= 500
 
 export const SUITS = ['s', 'c', 'h', 'd']
 export const VALUES = [

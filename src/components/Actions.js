@@ -31,6 +31,7 @@ export function Actions({ room, blind, currentTurn, currentBet, players }) {
         top={10}
         left={0}
         right={0}
+        zIndex={100}
       >
         <Button
           onClick={() => {
@@ -85,7 +86,6 @@ function BottomActions({
       bottom={10}
       left={0}
       right={0}
-      zIndex={49}
     >
       {canDeal ? (
         <>

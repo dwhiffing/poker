@@ -3,6 +3,7 @@ import { Box, Typography, Button, TextField } from '@material-ui/core'
 import { saveRoom, joinRoomWithReconnect } from '../utils'
 import { Flex } from '.'
 import faker from 'faker'
+import truncate from 'lodash/truncate'
 
 const AUTOCONNECT = true
 
@@ -70,7 +71,9 @@ export function Lobby({ setRoom }) {
       <TextField
         placeholder="Enter name"
         value={name}
-        onChange={e => setName(e.target.value)}
+        onChange={e =>
+          setName(truncate(e.target.value, { length: 10, omission: '' }))
+        }
         style={{ marginBottom: 20 }}
       />
 
