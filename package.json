@@ -17,11 +17,12 @@
     "react-motion": "^0.5.2",
     "react-scripts": "3.4.0"
   },
-  "homepage": "/poker",
   "scripts": {
+    "install": "npm install --prefix ./server && npm run build",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "NODE_ENV=production react-scripts build",
     "test": "react-scripts test",
+    "start-server": "npm start --prefix ./server",
     "eject": "react-scripts eject",
     "deploy": "gh-pages -d build"
   },

@@ -19,5 +19,5 @@ const gameServer = new Server({
 gameServer.define('poker', Poker)
 gameServer.listen(port)
 
-app.use(express.static(__dirname + '/../public'))
+app.use(express.static(__dirname + '/../build'))
 console.log(`Listening on ws://localhost:${port}`)

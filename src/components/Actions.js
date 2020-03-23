@@ -86,6 +86,7 @@ function BottomActions({
       bottom={10}
       left={0}
       right={0}
+      zIndex={100}
     >
       {canDeal ? (
         <>
