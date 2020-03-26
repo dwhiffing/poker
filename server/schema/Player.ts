@@ -138,21 +138,25 @@ export class Player extends Schema {
   }
 
   call(amount) {
+    if (amount - this.currentBet > this.money) {
+      amount = this.money + this.currentBet
+    }
     this.setAction(`call $${formatNumber(amount)}`)
 
     this.wager(amount)
   }
 
-  bet(amount, currentBet) {
-    if (amount + currentBet - this.currentBet > this.money) {
-      return
+  bet(amount, isRaise) {
+    if (amount - this.currentBet > this.money) {
+      amount = this.money + this.currentBet
     }
     this.setAction(`${isRaise > 0 ? 'raise' : 'bet'} $${formatNumber(amount)}`)
+    return this.wager(amount)
   }
 
   wager(amount) {
     if (amount - this.currentBet > this.money) {
-      return
+      return 0
     }
 
     this.turnPending = false

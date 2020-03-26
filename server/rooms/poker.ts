@@ -84,8 +84,10 @@ export class Poker extends Room<Table> {
       this.doNextTurn()
     } else if (data.action === 'bet' && isTheirTurn) {
       this.resetPlayerTurns()
-      player.bet(data.amount, this.state.currentBet)
-      this.state.currentBet = player.currentBet
+      player.bet(data.amount, this.state.currentBet > 0)
+      if (player.currentBet > this.state.currentBet) {
+        this.state.currentBet = player.currentBet
+      }
       this.doNextTurn()
     } else if (data.action === 'deal' && canDeal) {
       this.doNextPhase()
@@ -169,7 +171,7 @@ export class Poker extends Room<Table> {
       p => p.currentBet < this.state.currentBet && p.money > 0,
     )
     if (playersYetToCall.length > 0) {
-      this.resetPlayerTurns()
+      playersYetToCall.forEach(player => player.resetTurn())
       this.setCurrentTurn(playersYetToCall[0])
       return
     }
