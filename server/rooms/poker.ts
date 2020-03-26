@@ -53,10 +53,7 @@ export class Poker extends Room<Table> {
       if (typeof data.seatIndex === 'number') {
         player.sit(data.seatIndex)
       }
-      const availableSeat = this.getAvailableSeat()
-      if (typeof availableSeat === 'number') {
-        player.sit(availableSeat)
-      }
+      this.sitInAvailableSeat(player)
       this.getDealer()
     } else if (data.action === 'stand') {
       this.state.pot += player.bet
@@ -270,12 +267,15 @@ export class Poker extends Room<Table> {
 
   getActivePlayers = () => this.getSeatedPlayers().filter(p => p.inPlay)
 
-  getAvailableSeat = () => {
+  sitInAvailableSeat = player => {
     const takenSeats = this.getSeatedPlayers().map(p => p.seatIndex)
     const availableSeats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(
       n => !takenSeats.includes(n),
     )
-    return availableSeats[0] // sample(availableSeats)
+    const availableSeat = availableSeats[0] // sample(availableSeats)
+    if (typeof availableSeat === 'number') {
+      player.sit(availableSeat)
+    }
   }
 
   getSeatedPlayers = ({ getDealerIndex = false } = {}) => {
