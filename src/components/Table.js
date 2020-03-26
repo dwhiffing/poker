@@ -2,7 +2,7 @@ import React from 'react'
 import { Seat } from './Seat'
 import { Card } from './Card'
 import { Flex, Chips } from '.'
-import { getIsSmall, getHandLabel } from '../utils'
+import { getHandLabel } from '../utils'
 import { Box } from '@material-ui/core'
 
 const Table = ({ pot, layout, room, cards, onSit, players }) => {

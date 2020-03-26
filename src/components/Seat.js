@@ -17,7 +17,8 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
     name,
     winner,
     inPlay,
-    bet = 0,
+    lastAction,
+    currentBet = 0,
     money,
     hand,
     showCards,
@@ -74,9 +75,9 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
               </Typography>
             </Flex>
 
-            {bet > 0 && (
+            {currentBet > 0 && (
               <Box position="absolute" bottom={-25} zIndex={99}>
-                <Chips amount={bet} />
+                <Chips amount={currentBet} />
               </Box>
             )}
 
@@ -87,7 +88,21 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
               />
             )}
 
-            {inPlay && bet <= 0 && showCards && hand && (
+            {lastAction && (
+              <Box
+                position="absolute"
+                bottom={44}
+                zIndex={66}
+                style={{
+                  animation: 'animate 3s',
+                  animationTimingFunction: 'linear',
+                }}
+              >
+                <Chip label={lastAction} />
+              </Box>
+            )}
+
+            {inPlay && currentBet <= 0 && showCards && hand && (
               <Box position="absolute" bottom={-23} zIndex={66}>
                 <Chip label={hand} />
               </Box>

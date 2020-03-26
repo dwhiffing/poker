@@ -101,9 +101,11 @@ function BottomActions({
       {activePlayers.length > 0 && (
         <Action
           disabled={!canMove}
-          onClick={() => sendAction(currentBet > player.bet ? 'fold' : 'check')}
+          onClick={() =>
+            sendAction(currentBet > player.currentBet ? 'fold' : 'check')
+          }
         >
-          {currentBet > player.bet ? 'Fold' : 'Check'}
+          {currentBet > player.currentBet ? 'Fold' : 'Check'}
         </Action>
       )}
 
@@ -111,8 +113,8 @@ function BottomActions({
         <Action
           disabled={
             !canMove ||
-            player.money + player.bet < currentBet ||
-            currentBet === player.bet
+            player.money + player.currentBet < currentBet ||
+            currentBet === player.currentBet
           }
           onClick={() => sendAction('call')}
         >
@@ -123,7 +125,8 @@ function BottomActions({
       {activePlayers.length > 0 && (
         <Action
           disabled={
-            !canMove || player.money + player.bet < currentBet + betAmount
+            !canMove ||
+            player.money + player.currentBet < currentBet + betAmount
           }
           onClick={() => sendAction('bet', { amount: currentBet + betAmount })}
         >

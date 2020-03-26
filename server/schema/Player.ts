@@ -3,6 +3,7 @@ import { Card } from './Card'
 import { Delayed } from 'colyseus'
 
 const RECONNECT_TIME = 30
+let clock
 export class Player extends Schema {
   leaveInterval: Delayed
   // session id of client
@@ -11,6 +12,9 @@ export class Player extends Schema {
 
   @type('string')
   name: string
+
+  @type('string')
+  lastAction: string
 
   // is player currently connected
   @type('boolean')
@@ -50,7 +54,7 @@ export class Player extends Schema {
 
   // how much money are they betting
   @type('number')
-  bet: number
+  currentBet: number
 
   // how much money do they have
   @type('number')
@@ -76,13 +80,14 @@ export class Player extends Schema {
     super()
     this.id = id
     this.money = 1000
-    this.bet = 0
+    this.currentBet = 0
     this.remainingConnectionTime = 0
     this.remainingMoveTime = 0
     this.seatIndex = -1
     this.cards = new ArraySchema<Card>()
     this.connected = true
     this.inPlay = false
+    clock = opts.clock
     this.isBot = opts.isBot || false
     this.isAdmin = opts.isAdmin || false
     this.name = opts.name || ''
@@ -93,32 +98,61 @@ export class Player extends Schema {
     this.dealerPending = true
   }
 
+  setAction(action) {
+    this.lastAction = action
+    clock.setTimeout(() => {
+      this.lastAction = ''
+    }, 3000)
+  }
+
   fold() {
+    this.setAction('fold')
+    this.removeCards()
+  }
+
+  removeCards() {
     this.cards = this.cards.filter(() => false)
     this.inPlay = false
     this.showCards = false
     this.winner = false
-    this.bet = 0
+    this.currentBet = 0
     this.turnPending = false
   }
 
   check() {
+    this.setAction('check')
     this.turnPending = false
   }
 
   winPot(amount) {
-    this.bet = 0
+    this.setAction(`win $${amount}`)
+    this.currentBet = 0
     this.winner = true
     this.money += amount
   }
 
-  wager(amount) {
-    if (amount - this.bet > this.money) {
+  call(amount) {
+    this.setAction(`call $${amount}`)
+
+    this.wager(amount)
+  }
+
+  bet(amount, currentBet) {
+    if (amount - this.currentBet > this.money) {
       return
     }
+    this.setAction(`${currentBet > 0 ? 'raise' : 'bet'} $${amount}`)
+    this.wager(amount)
+  }
+
+  wager(amount) {
+    if (amount - this.currentBet > this.money) {
+      return
+    }
+
     this.turnPending = false
-    this.money -= amount - this.bet
-    this.bet = amount
+    this.money -= amount - this.currentBet
+    this.currentBet = amount
   }
 
   resetTurn() {
@@ -141,7 +175,7 @@ export class Player extends Schema {
   stand() {
     if (this.seatIndex === -1) return
 
-    this.fold()
+    this.removeCards()
     this.seatIndex = -1
     this.dealer = false
   }

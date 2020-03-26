@@ -23,7 +23,7 @@ export class Poker extends Room<Table> {
 
   onJoin(client: Client) {
     if (this.getPlayer(client.sessionId)) return
-    const player = new Player(client.sessionId, {})
+    const player = new Player(client.sessionId, { clock: this.clock })
     if (this.state.players.length === 0) {
       player.isAdmin = true
     }
@@ -38,6 +38,7 @@ export class Poker extends Room<Table> {
     const bot = new Player(faker.random.uuid().slice(0, 8), {
       isBot: true,
       name: faker.name.firstName(),
+      clock: this.clock,
     })
     this.state.players.push(bot)
     this.sitInAvailableSeat(bot)
@@ -73,15 +74,15 @@ export class Poker extends Room<Table> {
       player.check()
       this.doNextTurn()
     } else if (data.action === 'fold' && isTheirTurn) {
-      this.state.pot += player.bet
+      this.state.pot += player.currentBet
       player.fold()
       this.doNextTurn()
     } else if (data.action === 'call' && isTheirTurn) {
-      player.wager(this.state.currentBet)
+      player.call(this.state.currentBet)
       this.doNextTurn()
     } else if (data.action === 'bet' && isTheirTurn) {
-      player.wager(data.amount)
-      this.state.currentBet = player.bet
+      player.bet(data.amount, this.state.currentBet)
+      this.state.currentBet = player.currentBet
       this.doNextTurn()
     } else if (data.action === 'deal' && canDeal) {
       this.doNextPhase()
@@ -92,7 +93,7 @@ export class Poker extends Room<Table> {
       this.sitInAvailableSeat(player)
       this.getDealer()
     } else if (data.action === 'stand') {
-      this.state.pot += player.bet
+      this.state.pot += player.currentBet
       player.stand()
       if (this.getActivePlayers().length === 1) {
         this.endGame()
@@ -127,8 +128,8 @@ export class Poker extends Room<Table> {
 
   removePlayer(player) {
     const currentPlayer = this.getCurrentPlayer()
-    this.state.pot += player.bet
-    player.fold()
+    this.state.pot += player.currentBet
+    player.removeCards()
     this.state.players = this.state.players.filter(p => p.id !== player.id)
 
     if (this.getActivePlayers().length === 1) {
@@ -142,14 +143,14 @@ export class Poker extends Room<Table> {
     this.state.currentBet = 0
 
     this.getActivePlayers().forEach(player => {
-      this.state.pot += player.bet
-      player.bet = 0
+      this.state.pot += player.currentBet
+      player.currentBet = 0
     })
   }
 
   doNextPhase() {
     const playersYetToCall = this.getActivePlayers().filter(
-      p => p.bet < this.state.currentBet,
+      p => p.currentBet < this.state.currentBet,
     )
     if (playersYetToCall.length > 0) {
       playersYetToCall.forEach(player => player.resetTurn())
@@ -174,7 +175,7 @@ export class Poker extends Room<Table> {
                 ? this.state.blind * 2
                 : this.state.blind,
             )
-            this.state.currentBet = player.bet
+            this.state.currentBet = player.currentBet
           }
         })
     } else if (this.state.cards.length === 0) {
@@ -267,7 +268,7 @@ export class Poker extends Room<Table> {
     this.clock.setTimeout(() => {
       this.state.cards = this.state.cards.filter(f => false)
 
-      this.getSeatedPlayers().forEach(player => player.fold())
+      this.getSeatedPlayers().forEach(player => player.removeCards())
       if (this.moveTimeout) {
         this.moveTimeout.clear()
       }
@@ -284,7 +285,8 @@ export class Poker extends Room<Table> {
     if (FAST_MODE || player.isBot) {
       let amount
       const canBet =
-        player.money + player.bet > this.state.currentBet + this.state.blind * 4
+        player.money + player.currentBet >
+        this.state.currentBet + this.state.blind * 4
       let action = this.state.currentBet > 0 ? 'call' : 'check'
 
       if (canBet && action === 'check') {
