@@ -1,5 +1,12 @@
-import React, { useEffect } from 'react'
-import { Button } from '@material-ui/core'
+import React, { useEffect, useState } from 'react'
+import {
+  Button,
+  Slider,
+  Box,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+} from '@material-ui/core'
 import { Flex } from './'
 
 export function Actions({ room, blind, currentTurn, currentBet, players }) {
@@ -19,6 +26,7 @@ export function Actions({ room, blind, currentTurn, currentBet, players }) {
           currentBet={currentBet}
           betAmount={blind * 2}
           player={player}
+          blind={blind}
           players={players}
           sendAction={sendAction}
           canMove={canMove}
@@ -60,6 +68,7 @@ function BottomActions({
   sendAction,
   currentBet = 0,
   player,
+  blind,
   canMove,
   betAmount,
   players,
@@ -68,11 +77,21 @@ function BottomActions({
 }) {
   const activePlayers = players.filter(p => p.inPlay)
 
+  const [customBet, setCustomBet] = useState(currentBet)
+  const [showBetSlider, setShowBetSlider] = useState(false)
+  const [showAdmin, setShowAdmin] = useState(false)
+
   useEffect(() => {
     if (canDeal && autoDeal) {
       sendAction('deal')
     }
   }, [canDeal, sendAction, autoDeal])
+
+  useEffect(() => {
+    if (typeof currentBet === 'number') {
+      setCustomBet(currentBet + blind * 2)
+    }
+  }, [currentBet, blind])
 
   useEffect(() => {
     if (player.money === 0 && currentBet === 0 && autoCheck) {
@@ -85,72 +104,140 @@ function BottomActions({
   return (
     <Flex
       flex={0}
-      variant="justify-center"
+      variant="column center"
       position="fixed"
-      style={{ flexWrap: 'wrap' }}
       bottom={10}
       left={0}
       right={0}
       zIndex={100}
     >
-      {canDeal && (
-        <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
-          Deal
-        </Action>
-      )}
+      <Flex
+        variant="justify-center"
+        style={{ flexWrap: 'wrap', maxWidth: 600 }}
+      >
+        {showBetSlider ? (
+          <Box>
+            <Flex>
+              <Action onClick={() => setShowBetSlider(false)}>Cancel</Action>
+              <Action onClick={() => setCustomBet(customBet - blind)}>
+                -{blind}
+              </Action>
+              <Action onClick={() => setCustomBet(customBet + blind)}>
+                +{blind}
+              </Action>
+              <Action
+                onClick={() => {
+                  setShowBetSlider(false)
+                  sendAction('bet', { amount: customBet - currentBet })
+                }}
+              >
+                Submit
+              </Action>
+            </Flex>
+            <Flex>
+              <Slider
+                value={customBet}
+                onChange={(event, newValue) => setCustomBet(newValue)}
+                aria-labelledby="continuous-slider"
+                step={blind * 2}
+                min={blind * 2}
+                max={player.money}
+                style={{ marginRight: 20 }}
+              />
+              <Typography>{customBet}</Typography>
+            </Flex>
+          </Box>
+        ) : (
+          <>
+            {player.isAdmin && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={showAdmin}
+                    onChange={(e, newValue) => setShowAdmin(newValue)}
+                    name="showAdmin"
+                  />
+                }
+                label="Admin"
+              />
+            )}
 
-      {activePlayers.length > 0 && (
-        <Action
-          disabled={!canMove}
-          onClick={() =>
-            sendAction(currentBet > player.currentBet ? 'fold' : 'check')
-          }
-        >
-          {currentBet > player.currentBet ? 'Fold' : 'Check'}
-        </Action>
-      )}
+            {canDeal && (
+              <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
+                Deal
+              </Action>
+            )}
 
-      {activePlayers.length > 0 && (
-        <Action
-          disabled={
-            !canMove ||
-            player.money + player.currentBet < currentBet ||
-            currentBet === player.currentBet
-          }
-          onClick={() => sendAction('call')}
-        >
-          Call
-        </Action>
-      )}
+            {activePlayers.length > 0 && (
+              <Action
+                disabled={!canMove}
+                onClick={() =>
+                  sendAction(currentBet > player.currentBet ? 'fold' : 'check')
+                }
+              >
+                {currentBet > player.currentBet ? 'Fold' : 'Check'}
+              </Action>
+            )}
 
-      {activePlayers.length > 0 && (
-        <Action
-          disabled={
-            !canMove ||
-            player.money + player.currentBet < currentBet + betAmount
-          }
-          onClick={() => sendAction('bet', { amount: betAmount })}
-        >
-          {currentBet > 0 ? 'Raise' : 'Bet'}
-        </Action>
-      )}
+            {activePlayers.length > 0 && currentBet > 0 && (
+              <Action
+                disabled={
+                  !canMove ||
+                  player.money + player.currentBet < currentBet ||
+                  currentBet === player.currentBet
+                }
+                onClick={() => sendAction('call')}
+              >
+                Call
+              </Action>
+            )}
 
-      {player.isAdmin && (
-        <>
-          <Action
-            disabled={players.length >= 10}
-            onClick={() => sendAction('addBot')}
-          >
-            Add bot
-          </Action>
-          <Action
-            disabled={players.filter(p => p.isBot).length === 0}
-            onClick={() => sendAction('removeBot')}
-          >
-            Remove bot
-          </Action>
-        </>
-      )}
+            {activePlayers.length > 0 && (
+              <Action
+                disabled={
+                  !canMove ||
+                  player.money + player.currentBet < currentBet + betAmount
+                }
+                onClick={() => {
+                  setShowBetSlider(true)
+                  setCustomBet(currentBet + blind * 2)
+                }}
+              >
+                {currentBet > 0 ? 'Raise' : 'Bet'}
+              </Action>
+            )}
+
+            {showAdmin && (
+              <>
+                <Action
+                  disabled={players.length >= 10}
+                  onClick={() => sendAction('addBot')}
+                >
+                  + bot
+                </Action>
+                <Action
+                  disabled={players.filter(p => p.isBot).length === 0}
+                  onClick={() => sendAction('removeBot')}
+                >
+                  - bot
+                </Action>
+                <Action
+                  disabled={players.filter(p => p.isBot).length === 0}
+                  onClick={() => sendAction('increaseBlinds')}
+                >
+                  + blind ({blind})
+                </Action>
+                <Action
+                  disabled={players.filter(p => p.isBot).length === 0}
+                  onClick={() => sendAction('decreaseBlinds')}
+                >
+                  - blind ({blind})
+                </Action>
+              </>
+            )}
+          </>
+        )}
+      </Flex>
     </Flex>
   )
 }

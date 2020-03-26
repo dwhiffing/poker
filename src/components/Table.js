@@ -81,7 +81,7 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
           {document.documentElement.clientHeight > 350 &&
             document.documentElement.clientWidth > 400 &&
             pot > 0 && (
-              <Box zIndex={99}>
+              <Box mt={1} zIndex={99}>
                 <Chips amount={pot} />
               </Box>
             )}

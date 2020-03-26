@@ -105,6 +105,10 @@ export class Poker extends Room<Table> {
       this.addBot()
     } else if (data.action === 'removeBot') {
       this.removeBot()
+    } else if (data.action === 'increaseBlinds') {
+      this.state.blind = this.state.blind + 10
+    } else if (data.action === 'decreaseBlinds') {
+      this.state.blind = this.state.blind - 10
     }
   }
 
@@ -284,10 +288,10 @@ export class Poker extends Room<Table> {
 
     if (FAST_MODE || player.isBot) {
       let amount
-      const canBet =
-        player.money + player.currentBet >
-        this.state.currentBet + this.state.blind * 4
-      let action = this.state.currentBet > 0 ? 'call' : 'check'
+      const canBet = player.money + player.currentBet > this.state.currentBet
+
+      let action =
+        this.state.currentBet > 0 ? (canBet ? 'call' : 'fold') : 'check'
 
       if (canBet && action === 'check') {
         action = sample(['bet', 'check', 'check'])
@@ -363,7 +367,7 @@ export class Poker extends Room<Table> {
 
   setDealer() {
     let player = this.getSeatedPlayers({ getDealerIndex: true })
-      .filter(p => p.connected)
+      .filter(p => p.connected && p.money > 0)
       .find(p => p.dealerPending)
 
     this.getPlayers().forEach(p => {
