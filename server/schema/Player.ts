@@ -1,9 +1,15 @@
 import { type, Schema, ArraySchema } from '@colyseus/schema'
 import { Card } from './Card'
 import { Delayed } from 'colyseus'
-
+import numeral from 'numeral'
 const RECONNECT_TIME = 30
 let clock
+
+export const formatNumber = n =>
+  numeral(n)
+    .format('(0[.]00a)')
+    .toUpperCase()
+
 export class Player extends Schema {
   leaveInterval: Delayed
   // session id of client
@@ -125,14 +131,14 @@ export class Player extends Schema {
   }
 
   winPot(amount) {
-    this.setAction(`win $${amount}`)
+    this.setAction(`win $${formatNumber(amount)}`)
     this.currentBet = 0
     this.winner = true
     this.money += amount
   }
 
   call(amount) {
-    this.setAction(`call $${amount}`)
+    this.setAction(`call $${formatNumber(amount)}`)
 
     this.wager(amount)
   }
@@ -141,10 +147,7 @@ export class Player extends Schema {
     if (amount + currentBet - this.currentBet > this.money) {
       return
     }
-    this.setAction(
-      `${currentBet > 0 ? 'raise' : 'bet'} $${amount + currentBet}`,
-    )
-    this.wager(amount + currentBet)
+    this.setAction(`${isRaise > 0 ? 'raise' : 'bet'} $${formatNumber(amount)}`)
   }
 
   wager(amount) {

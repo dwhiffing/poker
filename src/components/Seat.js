@@ -2,8 +2,7 @@ import React from 'react'
 import { Card } from './Card'
 import { Button, Box, Typography, Chip } from '@material-ui/core'
 import { Flex, Chips } from '.'
-import { getIsSmall, getIsLarge } from '../utils'
-import numeral from 'numeral'
+import { getIsSmall, getIsLarge, formatNumber } from '../utils'
 
 export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
   const player = getPlayer(index) || {}
@@ -42,7 +41,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
       <Flex
         flex={1}
         mx={{ xs: 0.25, md: 2 }}
-        my={2}
+        my={{ xs: 2, md: 4 }}
         variant="center"
         borderRadius={12}
         minWidth={document.documentElement.clientWidth < 400 ? 64 : 83}
@@ -69,10 +68,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
                 {name || id}
               </Typography>
               <Typography style={{ fontSize: 12 }}>
-                $
-                {numeral(money)
-                  .format('(0[.]00a)')
-                  .toUpperCase()}
+                ${formatNumber(money)}
               </Typography>
             </Flex>
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Chip } from '@material-ui/core'
-import numeral from 'numeral'
+import { formatNumber } from '../utils'
 
 export const Flex = ({
   variant,
@@ -36,12 +36,5 @@ export const Flex = ({
 }
 
 export function Chips({ amount, ...props }) {
-  return (
-    <Chip
-      {...props}
-      label={numeral(amount)
-        .format('(0[.]00a)')
-        .toUpperCase()}
-    />
-  )
+  return <Chip {...props} label={formatNumber(amount)} />
 }

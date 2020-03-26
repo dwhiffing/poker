@@ -1,4 +1,5 @@
 import { Hand } from 'pokersolver'
+import numeral from 'numeral'
 
 export const maskCards = (player, id) => ({
   ...player,
@@ -69,3 +70,8 @@ export const getHandLabel = (player, cards) => {
 
 export const getIsPortrait = () =>
   document.documentElement.clientWidth < document.documentElement.clientHeight
+
+export const formatNumber = n =>
+  numeral(n)
+    .format('(0[.]00a)')
+    .toUpperCase()

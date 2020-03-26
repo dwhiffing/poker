@@ -8,6 +8,7 @@ import {
   FormControlLabel,
 } from '@material-ui/core'
 import { Flex } from './'
+import { formatNumber } from '../utils'
 
 export function Actions({ room, blind, currentTurn, currentBet, players }) {
   const player = players.find(p => p.id === room.sessionId) || {}
@@ -80,6 +81,7 @@ function BottomActions({
   const [customBet, setCustomBet] = useState(currentBet)
   const [showBetSlider, setShowBetSlider] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const playerTotal = player.money + player.currentBet
 
   useEffect(() => {
     if (canDeal && autoDeal) {
@@ -128,7 +130,7 @@ function BottomActions({
               <Action
                 onClick={() => {
                   setShowBetSlider(false)
-                  sendAction('bet', { amount: customBet - currentBet })
+                  sendAction('bet', { amount: customBet })
                 }}
               >
                 Submit
@@ -141,10 +143,12 @@ function BottomActions({
                 aria-labelledby="continuous-slider"
                 step={blind * 2}
                 min={blind * 2}
-                max={player.money + player.currentBet}
+                max={playerTotal}
                 style={{ marginRight: 20 }}
               />
-              <Typography>{customBet}</Typography>
+              <Flex variant="center" style={{ minWidth: 80 }}>
+                <Typography>${formatNumber(customBet)}</Typography>
+              </Flex>
             </Flex>
           </Box>
         ) : (
@@ -180,30 +184,26 @@ function BottomActions({
             )}
 
             {activePlayers.length > 0 && currentBet > 0 && (
-              <Action
-                disabled={
-                  !canMove ||
-                  player.money + player.currentBet < currentBet ||
-                  currentBet === player.currentBet
-                }
-                onClick={() => sendAction('call')}
-              >
-                Call
+              <Action disabled={!canMove} onClick={() => sendAction('call')}>
+                {currentBet > playerTotal ? 'All in' : 'Call'} ($
+                {formatNumber(
+                  currentBet > playerTotal ? playerTotal : currentBet,
+                )}
+                )
               </Action>
             )}
 
             {activePlayers.length > 0 && (
               <Action
-                disabled={
-                  !canMove ||
-                  player.money + player.currentBet < currentBet + betAmount
-                }
+                disabled={!canMove || playerTotal < currentBet + betAmount}
                 onClick={() => {
                   setShowBetSlider(true)
                   setCustomBet(currentBet + blind * 2)
                 }}
               >
-                {currentBet > 0 ? 'Raise' : 'Bet'}
+                {currentBet > 0
+                  ? `Raise ($${formatNumber(currentBet + blind * 2)})`
+                  : 'Bet'}
               </Action>
             )}
 
