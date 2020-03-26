@@ -126,7 +126,6 @@ export class Player extends Schema {
     this.showCards = false
     this.winner = false
     this.currentBet = 0
-    this.betThisHand = 0
     this.turnPending = false
   }
 
@@ -177,6 +176,7 @@ export class Player extends Schema {
 
   giveCards(cards) {
     this.inPlay = true
+    this.betThisHand = 0
     this.turnPending = true
     this.cards.push(...cards)
   }

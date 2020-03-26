@@ -184,7 +184,10 @@ function BottomActions({
             )}
 
             {activePlayers.length > 0 && currentBet > 0 && (
-              <Action disabled={!canMove} onClick={() => sendAction('call')}>
+              <Action
+                disabled={!canMove || currentBet === player.currentBet}
+                onClick={() => sendAction('call')}
+              >
                 {currentBet > playerTotal ? 'All in' : 'Call'} ($
                 {formatNumber(
                   currentBet > playerTotal ? playerTotal : currentBet,

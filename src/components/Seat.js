@@ -27,7 +27,7 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
 
   let backgroundColor = '#54b786'
   if (isTurn) {
-    backgroundColor = '#8dd2b0'
+    backgroundColor = 'white'
   }
   if (id && !connected) {
     backgroundColor = '#d86e6e'
@@ -77,6 +77,12 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
                 <Chips amount={currentBet} />
               </Box>
             )}
+
+            {/* {player.betThisHand && (
+              <Box position="absolute" bottom={-45} zIndex={99}>
+                <Typography>{player.betThisHand}</Typography>
+              </Box>
+            )} */}
 
             {dealer && <DealerChip />}
             {isTurn && (

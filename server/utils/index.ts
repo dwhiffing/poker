@@ -22,16 +22,21 @@ export const VALUES = [
   '7',
   '8',
   '9',
-  '10',
+  'T',
   'J',
   'Q',
   'K',
 ]
 export const SUITS = ['s', 'c', 'h', 'd']
 
-export const getPots = (players = []) => {
-  if (players.length < 2) {
-    return
+export const getPots = (players = [], extra = 0) => {
+  if (players.length === 1) {
+    return [
+      {
+        pot: players[0].betThisHand + extra,
+        players: players.map(p => p.id),
+      },
+    ]
   }
   players = players
     .map((p, i) => ({ id: p.id, bet: p.betThisHand }))
@@ -42,11 +47,11 @@ export const getPots = (players = []) => {
   players.forEach(({ id, bet }, currentPlayerIndex) => {
     if (currentPlayerIndex === 0) return
 
-    bet -= players[0].bet
-
-    for (let i = currentPlayerIndex - 1; i >= 2; i--) {
+    for (let i = currentPlayerIndex - 1; i > 0; i--) {
       bet -= players[i].bet - players[i - 1].bet
     }
+
+    bet -= players[0].bet
 
     sidePots.forEach(({ players }) => players.push(id))
 
@@ -58,12 +63,8 @@ export const getPots = (players = []) => {
     sidePot.pot && sidePots.push(sidePot)
   })
 
-  const lastSidePot = sidePots.slice(-1)[0]
-  if (lastSidePot && lastSidePot.players && lastSidePot.players.length === 1)
-    sidePots.pop()
-
   const mainPot = {
-    pot: players.length * players[0].bet,
+    pot: players.length * players[0].bet + extra,
     players: players.map(p => p.id),
   }
 

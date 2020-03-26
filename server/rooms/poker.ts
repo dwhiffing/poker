@@ -14,6 +14,7 @@ const FAST_MODE = false
 export class Poker extends Room<Table> {
   maxClients = 15
   turnSeatIndex = 0
+  gameEnded = true
   leaveInterval: Delayed
   moveTimeout: Delayed
   deck = []
@@ -180,22 +181,50 @@ export class Poker extends Room<Table> {
 
     if (this.state.cards.length === 5) {
       this.endGame()
-    } else if (this.getActivePlayers().length === 0) {
+      return
+    } else if (this.getActivePlayers().length === 0 && this.gameEnded) {
+      this.gameEnded = false
       this.deck = shuffleCards()
       this.state.cards = this.state.cards.filter(f => false)
       this.getSeatedPlayers()
         .filter(p => p.connected && p.money > 0)
         .forEach((player, index, players) => {
           player.giveCards(this.deck.splice(-2, 2))
-          if (index === players.length - 1 || index === players.length - 2) {
-            player.wager(
+
+          // post blinds
+          if (players.length === 2) {
+            const wager = index === 0 ? this.state.blind * 2 : this.state.blind
+            player.wager(wager)
+            this.state.currentBet = player.currentBet
+          } else if (
+            index === players.length - 1 ||
+            index === players.length - 2
+          ) {
+            let wager =
               index === players.length - 1
                 ? this.state.blind * 2
-                : this.state.blind,
-            )
-            this.state.currentBet = player.currentBet
+                : this.state.blind
+            player.wager(wager)
           }
         })
+
+      const blindPlayer = this.getActivePlayers().find(
+        p => p.currentBet === this.state.blind * 2,
+      )
+      if (blindPlayer) {
+        this.turnSeatIndex = blindPlayer.seatIndex + 1
+        if (this.turnSeatIndex > 9) {
+          this.turnSeatIndex -= 10
+        }
+        if (this.turnSeatIndex < 0) {
+          this.turnSeatIndex += 10
+        }
+      }
+      this.state.currentBet = this.state.blind * 2
+      this.getSeatedPlayers().forEach(player => player.resetTurn())
+      const nextPlayer = this.getNextPlayer()
+      this.setCurrentTurn(nextPlayer)
+      return
     } else if (this.state.cards.length === 0) {
       this.state.cards.push(...this.deck.splice(-3, 3)) // flop
     } else if (this.state.cards.length === 3) {
@@ -210,15 +239,26 @@ export class Poker extends Room<Table> {
     if (
       moneyPlayers.length < 2 &&
       this.getActivePlayers().length > 1 &&
-      this.state.cards.length < 5
+      this.state.cards.length <= 5
     ) {
       this.doNextPhase()
     } else {
-      this.setCurrentTurn(this.getActivePlayers().filter(p => p.money > 0)[0])
+      const dealer = this.getActivePlayers().find(p => p.dealer)
+      if (dealer) {
+        this.turnSeatIndex = dealer.seatIndex + 1
+        if (this.turnSeatIndex > 9) {
+          this.turnSeatIndex -= 10
+        }
+        if (this.turnSeatIndex < 0) {
+          this.turnSeatIndex += 10
+        }
+      }
+      const nextPlayer = this.getNextPlayer()
+      this.setCurrentTurn(nextPlayer)
     }
   }
 
-  doNextTurn() {
+  getNextPlayer() {
     const moneyPlayers = this.getActivePlayers().filter(p => p.money > 0)
     const seats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n =>
       moneyPlayers.find(p => p.seatIndex === n),
@@ -227,7 +267,14 @@ export class Poker extends Room<Table> {
       ...seats.slice(this.turnSeatIndex),
       ...seats.slice(0, this.turnSeatIndex),
     ]
-    const nextPlayer = orderedSeats.find(p => p && p.turnPending)
+
+    return orderedSeats.find(p => p && p.turnPending)
+  }
+
+  doNextTurn() {
+    const moneyPlayers = this.getActivePlayers().filter(p => p.money > 0)
+    const nextPlayer = this.getNextPlayer()
+
     if (this.getActivePlayers().length === 1) {
       return this.endGame()
     }
@@ -236,7 +283,7 @@ export class Poker extends Room<Table> {
       this.doNextPhase()
     }
 
-    if (nextPlayer) {
+    if (nextPlayer && !this.gameEnded) {
       this.setCurrentTurn(nextPlayer)
     } else {
       if (this.state.cards.length === 5) {
@@ -294,16 +341,46 @@ export class Poker extends Room<Table> {
   }
 
   payoutWinners() {
-    const pots = getPots(this.getActivePlayers())
-    pots.forEach(({ pot, players: playerIds }) => {
-      const winners = this.getWinners(playerIds)
-      const splitPot = Math.floor(pot / winners.length)
-      winners.forEach(player => player.winPot(splitPot))
+    // Get chips of folded players to add to main pot
+    const deadChips = this.getSeatedPlayers().reduce(
+      (sum, p) => sum + (p.inPlay ? 0 : p.betThisHand),
+      0,
+    )
+
+    // get sidepots
+    let pots = getPots(this.getActivePlayers(), deadChips).map(
+      ({ pot, players: playerIds }) => {
+        const winners = this.getWinners(playerIds)
+        return { pot, playerIds, winners }
+      },
+    )
+
+    // sum sidepots to determine payouts for each player
+    let payouts = {}
+    pots.forEach(pot => {
+      const splitPot = Math.floor(pot.pot / pot.winners.length)
+      pot.winners.forEach(winner => {
+        payouts[winner.id] = payouts[winner.id] || 0
+        payouts[winner.id] += splitPot
+      })
     })
+
+    // payout each player
+    Object.entries(payouts).forEach(([id, payout]) => {
+      this.getActivePlayers()
+        .find(p => p.id === id)
+        .winPot(payout)
+    })
+
+    // reset pot
     this.state.pot = 0
   }
 
   endGame() {
+    if (this.gameEnded) {
+      return
+    }
+    this.gameEnded = true
     this.getActivePlayers().forEach(p => (p.showCards = true))
     this.setCurrentTurn()
     this.putBetsInPot()
@@ -312,7 +389,10 @@ export class Poker extends Room<Table> {
     this.clock.setTimeout(() => {
       this.state.cards = this.state.cards.filter(f => false)
 
-      this.getSeatedPlayers().forEach(player => player.removeCards())
+      this.getSeatedPlayers().forEach(player => {
+        player.removeCards()
+        player.betThisHand = 0
+      })
       if (this.moveTimeout) {
         this.moveTimeout.clear()
       }
