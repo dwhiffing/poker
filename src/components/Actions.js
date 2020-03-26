@@ -233,6 +233,9 @@ function BottomActions({
                 >
                   - blind ({blind})
                 </Action>
+                <Action onClick={() => sendAction('gift')}>
+                  give 1k to all
+                </Action>
               </>
             )}
           </>

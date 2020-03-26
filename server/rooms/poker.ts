@@ -115,6 +115,8 @@ export class Poker extends Room<Table> {
       this.state.blind = this.state.blind + 10
     } else if (data.action === 'decreaseBlinds') {
       this.state.blind = this.state.blind - 10
+    } else if (data.action === 'gift') {
+      this.state.players.forEach(p => (p.money += 1000))
     }
   }
 
