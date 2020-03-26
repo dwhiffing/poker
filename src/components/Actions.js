@@ -141,7 +141,7 @@ function BottomActions({
                 aria-labelledby="continuous-slider"
                 step={blind * 2}
                 min={blind * 2}
-                max={player.money}
+                max={player.money + player.currentBet}
                 style={{ marginRight: 20 }}
               />
               <Typography>{customBet}</Typography>

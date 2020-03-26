@@ -98,6 +98,9 @@ export class Poker extends Room<Table> {
     } else if (data.action === 'stand') {
       this.state.pot += player.currentBet
       player.stand()
+      if (isTheirTurn) {
+        this.doNextTurn()
+      }
       if (this.getActivePlayers().length === 1) {
         this.endGame()
       }
@@ -161,7 +164,7 @@ export class Poker extends Room<Table> {
 
   doNextPhase() {
     const playersYetToCall = this.getActivePlayers().filter(
-      p => p.currentBet < this.state.currentBet,
+      p => p.currentBet < this.state.currentBet && p.money > 0,
     )
     if (playersYetToCall.length > 0) {
       this.resetPlayerTurns()
@@ -198,22 +201,35 @@ export class Poker extends Room<Table> {
     }
 
     this.getSeatedPlayers().forEach(player => player.resetTurn())
-    this.setCurrentTurn(this.getActivePlayers()[0])
+
+    const moneyPlayers = this.getActivePlayers().filter(p => p.money > 0)
+    if (
+      moneyPlayers.length < 2 &&
+      this.getActivePlayers().length > 1 &&
+      this.state.cards.length < 5
+    ) {
+      this.doNextPhase()
+    } else {
+      this.setCurrentTurn(this.getActivePlayers().filter(p => p.money > 0)[0])
+    }
   }
 
   doNextTurn() {
-    const activePlayers = this.getActivePlayers()
+    const moneyPlayers = this.getActivePlayers().filter(p => p.money > 0)
     const seats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n =>
-      activePlayers.find(p => p.seatIndex === n),
+      moneyPlayers.find(p => p.seatIndex === n),
     )
     const orderedSeats = [
       ...seats.slice(this.turnSeatIndex),
       ...seats.slice(0, this.turnSeatIndex),
     ]
     const nextPlayer = orderedSeats.find(p => p && p.turnPending)
-
-    if (activePlayers.length === 1) {
+    if (this.getActivePlayers().length === 1) {
       return this.endGame()
+    }
+
+    if (moneyPlayers.length < 2 && this.getActivePlayers().length > 1) {
+      this.doNextPhase()
     }
 
     if (nextPlayer) {
@@ -272,6 +288,7 @@ export class Poker extends Room<Table> {
   }
 
   payoutWinners() {
+    // TODO: need to handle side pots for all ins
     const winners = this.getWinners()
     const splitPot = Math.floor(this.state.pot / winners.length)
     winners.forEach(player => player.winPot(splitPot))
@@ -303,21 +320,20 @@ export class Poker extends Room<Table> {
 
     if (FAST_MODE || player.isBot) {
       let amount
-      const canBet = player.money + player.currentBet > this.state.currentBet
+      const allIn = player.money + player.currentBet < this.state.currentBet
 
-      let action =
-        this.state.currentBet > 0 ? (canBet ? 'call' : 'fold') : 'check'
+      let action = this.state.currentBet > 0 ? 'call' : 'check'
 
-      if (canBet && action === 'check') {
+      if (action === 'check') {
         action = sample(['bet', 'check', 'check'])
       }
 
-      if (canBet && action === 'call') {
+      if (action === 'call') {
         action = sample(['bet', 'call', 'call', 'call', 'call', 'call', 'fold'])
       }
 
       if (action === 'bet') {
-        amount = this.state.blind * 2
+        amount = allIn ? player.money + player.currentBet : this.state.blind * 2
       }
 
       this.doPlayerMove(player, { action, amount })
