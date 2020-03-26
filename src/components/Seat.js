@@ -78,11 +78,11 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
               </Box>
             )}
 
-            {/* {player.betThisHand && (
+            {player.betThisHand > 0 && showCards && (
               <Box position="absolute" bottom={-45} zIndex={99}>
-                <Typography>{player.betThisHand}</Typography>
+                <Typography>Total bet: {player.betThisHand}</Typography>
               </Box>
-            )} */}
+            )}
 
             {dealer && <DealerChip />}
             {isTurn && (
