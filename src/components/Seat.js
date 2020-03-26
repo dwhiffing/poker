@@ -2,7 +2,7 @@ import React from 'react'
 import { Card } from './Card'
 import { Button, Box, Typography, Chip } from '@material-ui/core'
 import { Flex, Chips } from '.'
-import { getIsSmall } from '../utils'
+import { getIsSmall, getIsLarge } from '../utils'
 import numeral from 'numeral'
 
 export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
@@ -121,16 +121,27 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
 }
 
 function Cards({ big, cards }) {
-  const yOffset = getIsSmall() ? -15 : -20
+  const yOffset = getIsSmall() ? 50 : 40
   const scale = big ? 1 : 0.7
   return (
-    <Box position="absolute" display="flex" justifyContent="center" zIndex={1}>
+    <Box
+      position="absolute"
+      display="flex"
+      justifyContent="center"
+      zIndex={1}
+      width={120}
+      height={130}
+      bottom={33}
+      overflow="hidden"
+    >
       {cards.map((card, i) => (
-        <Box key={`card-${i}`} width={i === 0 ? 15 : null}>
+        <Box key={`card-${i}`} width={i === 0 ? 17 : null}>
           <Card
             key={i}
             card={card}
-            scale={getIsSmall() ? scale * 0.9 : scale}
+            scale={
+              getIsSmall() ? scale * 0.9 : scale * (getIsLarge() ? 1.5 : 1)
+            }
             y={yOffset}
             style={{ position: 'relative', zIndex: big ? 10 : 1 }}
           />

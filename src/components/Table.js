@@ -2,7 +2,7 @@ import React from 'react'
 import { Seat } from './Seat'
 import { Card } from './Card'
 import { Flex, Chips } from '.'
-import { getHandLabel } from '../utils'
+import { getHandLabel, getIsLarge } from '../utils'
 import { Box } from '@material-ui/core'
 
 const Table = ({ pot, layout, room, cards, onSit, players }) => {
@@ -73,8 +73,8 @@ const Table = ({ pot, layout, room, cards, onSit, players }) => {
               <Card
                 key={card.index}
                 card={card}
-                scale={1}
-                style={{ margin: 5 }}
+                scale={getIsLarge() ? 1.4 : 1}
+                style={{ margin: getIsLarge() ? 20 : 5 }}
               />
             ))}
           </Box>

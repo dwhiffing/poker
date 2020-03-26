@@ -33,6 +33,10 @@ export const getIsSmall = () =>
   document.documentElement.clientWidth <= 500 ||
   document.documentElement.clientHeight <= 500
 
+export const getIsLarge = () =>
+  document.documentElement.clientWidth >= 700 &&
+  document.documentElement.clientHeight >= 700
+
 export const SUITS = ['s', 'c', 'h', 'd']
 export const VALUES = [
   0,
