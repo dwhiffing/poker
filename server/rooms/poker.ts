@@ -21,7 +21,7 @@ export class Poker extends Room<Table> {
 
   onCreate(options) {
     this.setState(new Table())
-    this.setMetadata({ roomName: options.roomName })
+    options.roomName && this.setMetadata({ roomName: options.roomName })
   }
 
   onJoin(client: Client) {

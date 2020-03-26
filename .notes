@@ -1,0 +1,15 @@
+write unit tests
+fix client order issue (cards disappear any time someone leaves or rejoins)
+add private rooms
+prevent client from joining more than once
+add options for limit vs no limit
+
+15 seconds for move timer
+add sound effects
+call and bet should show difference
+make sure there is always an admin
+you can only raise by at least the current bet
+increase time cards are displayed
+
+make disconnect clearer
+you can only go all in for the amount of the next biggest player to avoid over pot
