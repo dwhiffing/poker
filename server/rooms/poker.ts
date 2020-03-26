@@ -1,6 +1,6 @@
 import { Room, Delayed, Client } from 'colyseus'
 import { Player, Table } from '../schema'
-import { SUITS, VALUES, shuffleCards } from '../utils'
+import { SUITS, VALUES, shuffleCards, getPots } from '../utils'
 import { Hand } from 'pokersolver'
 import faker from 'faker'
 import random from 'lodash/random'
@@ -269,14 +269,16 @@ export class Poker extends Room<Table> {
     return this.getPlayer(this.state.currentTurn)
   }
 
-  getWinners() {
+  getWinners(ids) {
     const cards = this.state.cards.map(
       c => `${VALUES[c.value]}${SUITS[c.suit]}`,
     )
 
-    this.getActivePlayers().forEach(p => (p.showCards = true))
+    const players = this.getActivePlayers().filter(p => ids.includes(p.id))
 
-    const playersWithHands = this.getActivePlayers().map(p => ({
+    players.forEach(p => (p.showCards = true))
+
+    const playersWithHands = players.map(p => ({
       id: p.id,
       hand: [...p.cards.values()]
         .map(c => `${VALUES[c.value]}${SUITS[c.suit]}`)
@@ -292,10 +294,12 @@ export class Poker extends Room<Table> {
   }
 
   payoutWinners() {
-    // TODO: need to handle side pots for all ins
-    const winners = this.getWinners()
-    const splitPot = Math.floor(this.state.pot / winners.length)
-    winners.forEach(player => player.winPot(splitPot))
+    const pots = getPots(this.getActivePlayers())
+    pots.forEach(({ pot, players: playerIds }) => {
+      const winners = this.getWinners(playerIds)
+      const splitPot = Math.floor(pot / winners.length)
+      winners.forEach(player => player.winPot(splitPot))
+    })
     this.state.pot = 0
   }
 

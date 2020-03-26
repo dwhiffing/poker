@@ -62,6 +62,9 @@ export class Player extends Schema {
   @type('number')
   currentBet: number
 
+  @type('number')
+  betThisHand: number
+
   // how much money do they have
   @type('number')
   money: number
@@ -102,6 +105,7 @@ export class Player extends Schema {
     this.showCards = false
     this.winner = false
     this.dealerPending = true
+    this.betThisHand = 0
   }
 
   setAction(action) {
@@ -122,6 +126,7 @@ export class Player extends Schema {
     this.showCards = false
     this.winner = false
     this.currentBet = 0
+    this.betThisHand = 0
     this.turnPending = false
   }
 
@@ -161,6 +166,7 @@ export class Player extends Schema {
 
     this.turnPending = false
     this.money -= amount - this.currentBet
+    this.betThisHand += amount - this.currentBet
     this.currentBet = amount
   }
 

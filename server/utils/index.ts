@@ -28,3 +28,44 @@ export const VALUES = [
   'K',
 ]
 export const SUITS = ['s', 'c', 'h', 'd']
+
+export const getPots = (players = []) => {
+  if (players.length < 2) {
+    return
+  }
+  players = players
+    .map((p, i) => ({ id: p.id, bet: p.betThisHand }))
+    .sort((a, b) => a.bet - b.bet)
+
+  const sidePots = []
+
+  players.forEach(({ id, bet }, currentPlayerIndex) => {
+    if (currentPlayerIndex === 0) return
+
+    bet -= players[0].bet
+
+    for (let i = currentPlayerIndex - 1; i >= 2; i--) {
+      bet -= players[i].bet - players[i - 1].bet
+    }
+
+    sidePots.forEach(({ players }) => players.push(id))
+
+    let sidePot = {
+      pot: (players.length - currentPlayerIndex) * bet,
+      players: [id],
+    }
+
+    sidePot.pot && sidePots.push(sidePot)
+  })
+
+  const lastSidePot = sidePots.slice(-1)[0]
+  if (lastSidePot && lastSidePot.players && lastSidePot.players.length === 1)
+    sidePots.pop()
+
+  const mainPot = {
+    pot: players.length * players[0].bet,
+    players: players.map(p => p.id),
+  }
+
+  return [mainPot, ...sidePots]
+}
