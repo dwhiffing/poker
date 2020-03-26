@@ -36,5 +36,5 @@ export const Flex = ({
 }
 
 export function Chips({ amount, ...props }) {
-  return <Chip {...props} label={formatNumber(amount)} />
+  return <Chip {...props} label={'$' + formatNumber(amount)} />
 }

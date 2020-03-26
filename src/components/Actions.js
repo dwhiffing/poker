@@ -14,7 +14,7 @@ export function Actions({ room, blind, currentTurn, currentBet, players }) {
   const player = players.find(p => p.id === room.sessionId) || {}
   const canMove = currentTurn === room.sessionId
   const activePlayers = players.filter(p => p.inPlay)
-  const numPlayers = players.filter(p => p.seatIndex > -1).length
+  const numPlayers = players.filter(p => p.seatIndex > -1 && p.money > 0).length
   const canDeal = player.dealer && numPlayers >= 2 && activePlayers.length === 0
   const canStand = player.seatIndex !== -1
   const sendAction = (action, rest = {}) => room.send({ action, ...rest })
