@@ -40,18 +40,19 @@ export const Seat = ({ onSit, getPlayer, index, style = {} }) => {
   return (
     <Flex position="relative" variant="center">
       <Flex
-        flex={0}
-        mx={1}
+        flex={1}
+        mx={{ xs: 0.25, md: 2 }}
         my={2}
         variant="center"
         borderRadius={12}
         minWidth={document.documentElement.clientWidth < 400 ? 64 : 83}
+        maxWidth={125}
         position="relative"
         py={1}
         style={{
           border: `3px solid ${COLORS[index]}`,
           backgroundColor,
-          zIndex: 10,
+          zIndex: dealer ? 15 : 10,
           ...style,
         }}
       >

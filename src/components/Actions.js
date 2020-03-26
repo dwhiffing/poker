@@ -87,6 +87,7 @@ function BottomActions({
       flex={0}
       variant="justify-center"
       position="fixed"
+      style={{ flexWrap: 'wrap' }}
       bottom={10}
       left={0}
       right={0}
