@@ -8,10 +8,12 @@ import sample from 'lodash/sample'
 
 const MOVE_TIME = 30
 const END_OF_HAND_TIME = 5
+const BOT_TIMEOUT = 1000
 const FAST_MODE = false
 
 export class Poker extends Room<Table> {
   maxClients = 15
+  turnSeatIndex = 0
   leaveInterval: Delayed
   moveTimeout: Delayed
   deck = []
@@ -53,7 +55,7 @@ export class Poker extends Room<Table> {
     }
   }
 
-  doPlayerMove(bot, action = {}, timeout = 800) {
+  doPlayerMove(bot, action = {}, timeout = BOT_TIMEOUT) {
     this.clock.setTimeout(() => {
       this.onMessage({ sessionId: bot.id } as Client, {
         ...action,
@@ -81,6 +83,7 @@ export class Poker extends Room<Table> {
       player.call(this.state.currentBet)
       this.doNextTurn()
     } else if (data.action === 'bet' && isTheirTurn) {
+      this.resetPlayerTurns()
       player.bet(data.amount, this.state.currentBet)
       this.state.currentBet = player.currentBet
       this.doNextTurn()
@@ -152,12 +155,16 @@ export class Poker extends Room<Table> {
     })
   }
 
+  resetPlayerTurns() {
+    this.getActivePlayers().forEach(player => player.resetTurn())
+  }
+
   doNextPhase() {
     const playersYetToCall = this.getActivePlayers().filter(
       p => p.currentBet < this.state.currentBet,
     )
     if (playersYetToCall.length > 0) {
-      playersYetToCall.forEach(player => player.resetTurn())
+      this.resetPlayerTurns()
       this.setCurrentTurn(playersYetToCall[0])
       return
     }
@@ -196,7 +203,14 @@ export class Poker extends Room<Table> {
 
   doNextTurn() {
     const activePlayers = this.getActivePlayers()
-    const nextPlayer = activePlayers.find(p => p.turnPending)
+    const seats = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n =>
+      activePlayers.find(p => p.seatIndex === n),
+    )
+    const orderedSeats = [
+      ...seats.slice(this.turnSeatIndex),
+      ...seats.slice(0, this.turnSeatIndex),
+    ]
+    const nextPlayer = orderedSeats.find(p => p && p.turnPending)
 
     if (activePlayers.length === 1) {
       return this.endGame()
@@ -225,6 +239,7 @@ export class Poker extends Room<Table> {
 
     if (player) {
       this.state.currentTurn = player.id
+      this.turnSeatIndex = player.seatIndex
       player.isTurn = true
       this.setAutoMoveTimeout()
     }
