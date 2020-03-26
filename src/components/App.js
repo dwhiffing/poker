@@ -47,7 +47,7 @@ function App() {
     return <Lobby setRoom={setRoom} />
   }
 
-  console.log({ pot, cards, players, currentTurn })
+  // console.log({ pot, cards, players, currentTurn })
 
   return (
     <Flex
