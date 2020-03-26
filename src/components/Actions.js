@@ -128,7 +128,7 @@ function BottomActions({
             !canMove ||
             player.money + player.currentBet < currentBet + betAmount
           }
-          onClick={() => sendAction('bet', { amount: currentBet + betAmount })}
+          onClick={() => sendAction('bet', { amount: betAmount })}
         >
           {currentBet > 0 ? 'Raise' : 'Bet'}
         </Action>

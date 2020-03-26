@@ -138,11 +138,13 @@ export class Player extends Schema {
   }
 
   bet(amount, currentBet) {
-    if (amount - this.currentBet > this.money) {
+    if (amount + currentBet - this.currentBet > this.money) {
       return
     }
-    this.setAction(`${currentBet > 0 ? 'raise' : 'bet'} $${amount}`)
-    this.wager(amount)
+    this.setAction(
+      `${currentBet > 0 ? 'raise' : 'bet'} $${amount + currentBet}`,
+    )
+    this.wager(amount + currentBet)
   }
 
   wager(amount) {
