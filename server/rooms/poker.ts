@@ -2,6 +2,9 @@ import { Room, Delayed, Client } from 'colyseus'
 import { Player, Table } from '../schema'
 import { SUITS, VALUES, shuffleCards } from '../utils'
 import { Hand } from 'pokersolver'
+import faker from 'faker'
+import random from 'lodash/random'
+import sample from 'lodash/sample'
 
 const MOVE_TIME = 30
 const END_OF_HAND_TIME = 5
@@ -20,8 +23,41 @@ export class Poker extends Room<Table> {
 
   onJoin(client: Client) {
     if (this.getPlayer(client.sessionId)) return
+    const player = new Player(client.sessionId, {})
+    if (this.state.players.length === 0) {
+      player.isAdmin = true
+    }
+    this.state.players.push(player)
+  }
 
-    this.state.players.push(new Player(client.sessionId))
+  addBot() {
+    if (this.state.players.length >= 10) {
+      return
+    }
+
+    const bot = new Player(faker.random.uuid().slice(0, 8), {
+      isBot: true,
+      name: faker.name.firstName(),
+    })
+    this.state.players.push(bot)
+    this.sitInAvailableSeat(bot)
+  }
+
+  removeBot() {
+    const nextBotToRemove = this.getSeatedPlayers()
+      .sort((a, b) => b.seatIndex - a.seatIndex)
+      .find(p => p.isBot)
+    if (nextBotToRemove) {
+      this.removePlayer(nextBotToRemove)
+    }
+  }
+
+  doPlayerMove(bot, action = {}, timeout = 800) {
+    this.clock.setTimeout(() => {
+      this.onMessage({ sessionId: bot.id } as Client, {
+        ...action,
+      })
+    }, random(timeout / 2, timeout * 2))
   }
 
   onMessage(client: Client, data: any) {
@@ -64,6 +100,10 @@ export class Poker extends Room<Table> {
       this.getDealer()
     } else if (data.action === 'setName') {
       player.setName(data.name)
+    } else if (data.action === 'addBot') {
+      this.addBot()
+    } else if (data.action === 'removeBot') {
+      this.removeBot()
     }
   }
 
@@ -241,11 +281,27 @@ export class Poker extends Room<Table> {
       this.moveTimeout.clear()
     }
 
-    if (FAST_MODE) {
-      this.onMessage({ sessionId: this.state.currentTurn } as Client, {
-        action: 'check',
-      })
+    if (FAST_MODE || player.isBot) {
+      let amount
+      const canBet =
+        player.money + player.bet > this.state.currentBet + this.state.blind * 4
+      let action = this.state.currentBet > 0 ? 'call' : 'check'
+
+      if (canBet && action === 'check') {
+        action = sample(['bet', 'check', 'check'])
+      }
+
+      if (canBet && action === 'call') {
+        action = sample(['bet', 'call', 'call', 'call', 'call', 'call', 'fold'])
+      }
+
+      if (action === 'bet') {
+        amount = this.state.blind * 2
+      }
+
+      this.doPlayerMove(player, { action, amount })
     }
+
     {
       player.remainingMoveTime = MOVE_TIME
       this.moveTimeout = this.clock.setInterval(() => {
@@ -321,6 +377,9 @@ export class Poker extends Room<Table> {
 
     if (player) {
       player.makeDealer()
+      if (player.isBot) {
+        this.doPlayerMove(player, { action: 'deal' })
+      }
       return player
     }
   }

@@ -24,6 +24,12 @@ export class Player extends Schema {
   @type('boolean')
   turnPending: boolean
 
+  @type('boolean')
+  isBot: boolean
+
+  @type('boolean')
+  isAdmin: boolean
+
   // is this player currently the dealer
   @type('boolean')
   dealer: boolean
@@ -66,7 +72,7 @@ export class Player extends Schema {
   @type([Card])
   cards = new ArraySchema<Card>()
 
-  constructor(id: string) {
+  constructor(id: string, opts) {
     super()
     this.id = id
     this.money = 1000
@@ -77,6 +83,9 @@ export class Player extends Schema {
     this.cards = new ArraySchema<Card>()
     this.connected = true
     this.inPlay = false
+    this.isBot = opts.isBot || false
+    this.isAdmin = opts.isAdmin || false
+    this.name = opts.name || ''
     this.dealer = false
     this.turnPending = false
     this.showCards = false

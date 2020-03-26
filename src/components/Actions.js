@@ -13,12 +13,13 @@ export function Actions({ room, blind, currentTurn, currentBet, players }) {
 
   return (
     <>
-      {(canMove || canDeal) && (
+      {(canMove || canDeal || player.isAdmin) && (
         <BottomActions
           canDeal={canDeal}
           currentBet={currentBet}
           betAmount={blind * 2}
           player={player}
+          players={players}
           sendAction={sendAction}
           canMove={canMove}
         />
@@ -61,9 +62,12 @@ function BottomActions({
   player,
   canMove,
   betAmount,
+  players,
   autoDeal = false,
   autoCheck = false,
 }) {
+  const activePlayers = players.filter(p => p.inPlay)
+
   useEffect(() => {
     if (canDeal && autoDeal) {
       sendAction('deal')
@@ -88,41 +92,58 @@ function BottomActions({
       right={0}
       zIndex={100}
     >
-      {canDeal ? (
+      {canDeal && (
+        <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
+          Deal
+        </Action>
+      )}
+
+      {activePlayers.length > 0 && (
+        <Action
+          disabled={!canMove}
+          onClick={() => sendAction(currentBet > player.bet ? 'fold' : 'check')}
+        >
+          {currentBet > player.bet ? 'Fold' : 'Check'}
+        </Action>
+      )}
+
+      {activePlayers.length > 0 && (
+        <Action
+          disabled={
+            !canMove ||
+            player.money + player.bet < currentBet ||
+            currentBet === player.bet
+          }
+          onClick={() => sendAction('call')}
+        >
+          Call
+        </Action>
+      )}
+
+      {activePlayers.length > 0 && (
+        <Action
+          disabled={
+            !canMove || player.money + player.bet < currentBet + betAmount
+          }
+          onClick={() => sendAction('bet', { amount: currentBet + betAmount })}
+        >
+          {currentBet > 0 ? 'Raise' : 'Bet'}
+        </Action>
+      )}
+
+      {player.isAdmin && (
         <>
-          <Action disabled={!canDeal} onClick={() => sendAction('deal')}>
-            Deal
-          </Action>
-        </>
-      ) : (
-        <>
           <Action
-            disabled={!canMove}
-            onClick={() =>
-              sendAction(currentBet > player.bet ? 'fold' : 'check')
-            }
+            disabled={players.length >= 10}
+            onClick={() => sendAction('addBot')}
           >
-            {currentBet > player.bet ? 'Fold' : 'Check'}
+            Add bot
           </Action>
           <Action
-            disabled={
-              !canMove ||
-              player.money + player.bet < currentBet ||
-              currentBet === player.bet
-            }
-            onClick={() => sendAction('call')}
+            disabled={players.filter(p => p.isBot).length === 0}
+            onClick={() => sendAction('removeBot')}
           >
-            Call
-          </Action>
-          <Action
-            disabled={
-              !canMove || player.money + player.bet < currentBet + betAmount
-            }
-            onClick={() =>
-              sendAction('bet', { amount: currentBet + betAmount })
-            }
-          >
-            {currentBet > 0 ? 'Raise' : 'Bet'}
+            Remove bot
           </Action>
         </>
       )}
