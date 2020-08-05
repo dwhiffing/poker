@@ -1,27 +1,6 @@
 import { Poker } from './poker'
-import { Client } from 'colyseus'
 
 let room
-let sendMessage = (room, sessionId, data) =>
-  room.onMessage({ sessionId } as Client, data)
-
-let sendMessages = (room, actions) =>
-  actions.forEach(a => sendMessage(room, a.id, a.data))
-
-let connectPlayers = (room, players) =>
-  players.forEach(p => {
-    room.onJoin({ sessionId: p })
-    sendMessage(room, p, { action: 'sit' })
-  })
-
-let startGameWithPlayers = (room, playerIds) => {
-  connectPlayers(room, playerIds)
-  sendMessage(room, playerIds[0], { action: 'deal' })
-  const players = room.getSeatedPlayers({ getDealerIndex: true })
-  players.forEach(player => expect(player.cards.length).toBe(2))
-  return players
-}
-
 describe('Poker', () => {
   beforeEach(() => {
     room = new Poker()
@@ -33,26 +12,6 @@ describe('Poker', () => {
   })
 
   describe('doNextPhase', () => {
-    describe('handles start of game correctly', () => {
-      it('deals out the cards correctly for n players', () => {
-        for (let i = 2; i <= 10; i++) {
-          room = new Poker()
-          room.onCreate({})
-          const ids = new Array(i).fill('').map((_, i) => `${i + 1}`)
-          const players = startGameWithPlayers(room, ids)
-          expect(players[0].dealer).toBe(true)
-          expect(players[players.length > 2 ? 1 : 0].currentBet).toBe(10)
-          expect(players[players.length > 2 ? 2 : 1].currentBet).toBe(20)
-          expect(room.state.currentTurn).toBe(players.length > 3 ? '4' : '1')
-          room.disconnect()
-        }
-      })
-    })
-
-    test.todo('handles flop correctly')
-    test.todo('handles turn correctly')
-    test.todo('handles river correctly')
-    test.todo('handles end of game correctly')
     test.todo('starts the next phase if no actions are possible')
     test.todo('sets the next player turn')
     test.todo('handles any players that have not called')

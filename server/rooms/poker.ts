@@ -12,6 +12,8 @@ const BOT_TIMEOUT = 1000
 
 export class Poker extends Room<Table> {
   maxClients = 15
+  pots = []
+  payouts = {}
   turnSeatIndex = 0
   gameEnded = true
   leaveInterval: Delayed
@@ -319,7 +321,7 @@ export class Poker extends Room<Table> {
     )
 
     // get sidepots
-    let pots = getPots(this.getActivePlayers(), deadChips).map(
+    this.pots = getPots(this.getActivePlayers(), deadChips).map(
       ({ pot, players: playerIds }) => {
         const winners = this.getWinners(playerIds)
         return { pot, playerIds, winners }
@@ -328,7 +330,7 @@ export class Poker extends Room<Table> {
 
     // sum sidepots to determine payouts for each player
     let payouts = {}
-    pots.forEach(pot => {
+    this.pots.forEach(pot => {
       const splitPot = Math.floor(pot.pot / pot.winners.length)
       pot.winners.forEach(winner => {
         payouts[winner.id] = payouts[winner.id] || 0
@@ -344,6 +346,7 @@ export class Poker extends Room<Table> {
     })
 
     // reset pot
+    this.payouts = payouts
     this.state.pot = 0
   }
 
