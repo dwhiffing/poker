@@ -18,6 +18,8 @@ export function Lobby({ setRoom }) {
   const createRoom = useCallback(
     async name => {
       const roomName = prompt('Room name?')
+      if (!roomName) return
+      
       const room = await window.colyseus.create('poker', { roomName })
       saveRoom(room, name)
       room.send({ action: 'setName', name })
