@@ -5,7 +5,7 @@ import { Client } from 'colyseus.js'
 
 window.colyseus = new Client(
   process.env.NODE_ENV === 'production'
-    ? 'wss://web-production-3e56.up.railway.app/'
+    ? 'wss://daniel-poker.onrender.com'
     : 'ws://localhost:3553',
 )
 
